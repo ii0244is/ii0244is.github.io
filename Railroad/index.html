@@ -1,0 +1,192 @@
+
+<html lang="en">
+
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="css/main.css">
+<script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript" src="js/TimeSlider.js"></script>
+<script type="text/javascript" src="js/LoadingView.js"></script>
+<script type="text/javascript" src="js/webGLCanvas.js"></script>
+<script type="text/javascript" src="js/Utility/glMatrix.js"></script>
+<script type="text/javascript" src="js/Utility/glUtilityFunc.js"></script>
+<script type="text/javascript" src="js/glObject/glObjectShapeJson_Line.js"></script>
+<script type="text/javascript" src="js/glObject/glObjectJsonData_Railroad.js"></script>
+</head>
+
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    objectID 
+//////////////////////////////////////////////////////////  -->
+
+<script id='vertexShaderObjectMap' type="x-shader/x-vertex">
+attribute vec3 aVertexPosition;
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+
+void main()
+{
+    gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( aVertexPosition, 1.0 );
+}
+</script>
+    
+<script id='fragmentShaderObjectMap' type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 uObjectID;
+
+void main()
+{
+    gl_FragColor = uObjectID;
+}
+</script> 
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    single color 
+//////////////////////////////////////////////////////////  -->
+
+<script id='vertexShaderSingleColor' type="x-shader/x-vertex">
+attribute vec3 aVertexPosition;
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+
+void main()
+{
+    gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( aVertexPosition, 1.0 );
+}
+</script>
+
+<script id='fragmentShaderSingleColor' type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 uColor;
+
+void main()
+{
+    gl_FragColor = uColor;
+}
+</script> 
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    objectID PolyLine 
+//////////////////////////////////////////////////////////  -->
+
+<script id='vertexShaderLineObjectMap' type="x-shader/x-vertex">
+precision highp float;    
+attribute vec3 aVertexPosition;
+attribute vec4 aObjectID;
+attribute vec4 aLinePosition;
+    
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+uniform vec4 uLineParam;    
+    
+varying vec4 vObjectID; 
+
+void main() 
+{
+    vec3 sideDir = aVertexPosition - aLinePosition.xyz;
+    vec3 pos = aLinePosition.xyz + uLineParam.x * sideDir * 4.0;
+    vObjectID = aObjectID;
+    gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( pos, 1.0 );
+}                                                   
+</script> 
+    
+<script id='fragmentShaderLineObjectMap' type="x-shader/x-fragment">
+precision highp float;
+uniform vec4 uObjectID;
+varying vec4 vObjectID; 
+
+void main()
+{
+    float time = uObjectID.y;    
+    if( time < vObjectID.z || vObjectID.w < time )
+    {
+        discard;
+    }
+
+    gl_FragColor = vec4( uObjectID.x, vObjectID.xy, 0.0 );
+}
+</script> 
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    Polyline
+//////////////////////////////////////////////////////////  -->
+
+<script id = 'vertexShaderPolyLine' type = "x-shader/x-vertex" >
+precision highp float;
+attribute vec3 aVertexPosition;
+attribute vec4 aColor;
+attribute vec4 aObjectID;
+attribute vec4 aLinePosition;
+    
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+uniform vec4 uLineParam;  
+
+varying vec4 vColor; 
+varying vec4 vObjectID; 
+
+void main() 
+{
+    vec3 sideDir = aVertexPosition - aLinePosition.xyz;
+    vec3 pos = aLinePosition.xyz + uLineParam.x * sideDir;  
+    vColor = aColor;
+    vObjectID = aObjectID;
+    float depth = aObjectID.y * 256.0 + aObjectID.x;
+    gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( pos, 1.0 );
+    gl_Position.z = depth / ( 256.0 * 256.0 );
+    if( uLineParam.y > 0.5 && uLineParam.z == aObjectID.x && uLineParam.w == aObjectID.y )
+    {
+        gl_Position.z = 0.0; 
+    }      
+}                                                   
+</script> 
+    
+<script id = 'fragmentShaderPolyLine' type = "x-shader/x-fragment" >
+precision highp float;
+uniform vec4 uParam;
+
+varying vec4 vColor; 
+varying vec4 vObjectID; 
+
+void main() 
+{
+    float time = uParam.x;    
+    if( time < vObjectID.z || vObjectID.w < time )
+    {
+        discard;
+    }
+
+    if( uParam.y > 0.5 && uParam.z == vObjectID.x && uParam.w == vObjectID.y )
+    {
+        gl_FragColor = vec4( vColor.xyz * 3.0, vColor.w );
+    }
+    //else if( uParam.y > 0.5 )
+    //{
+    //    gl_FragColor = vec4( vColor.xyz * 0.5, vColor.w );
+    //}
+    else
+    {
+        gl_FragColor = vec4( vColor.xyz, vColor.w );
+    }
+}                                             
+</script> 
+
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    HTML
+//////////////////////////////////////////////////////////  -->
+
+<body onload="appStart()">
+    <div id="glCanvasArea" class="glCanvasStyle"></div>
+</body>
+
+</html>
