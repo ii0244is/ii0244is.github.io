@@ -1,0 +1,51 @@
+
+<html lang="en">
+
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="css/main.css">
+<script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript" src="js/Sphere.js"></script>
+<script type="text/javascript" src="js/Line.js"></script>
+<script type="text/javascript" src="js/CameraController.js"></script>
+<script type="text/javascript" src="js/glMatrix.js"></script>
+<script type="text/javascript" src="js/glUtilityFunc.js"></script>
+</head>
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    fill with single color 
+//////////////////////////////////////////////////////////  -->
+
+<script id='vertexShaderSingleColor' type="x-shader/x-vertex">
+attribute vec3 aVertexPosition;
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+
+void main()
+{
+    gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( aVertexPosition, 1.0 );
+}
+</script>
+
+<script id='fragmentShaderSingleColor' type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 uColor;
+
+void main()
+{
+    gl_FragColor = uColor;
+}
+</script> 
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    HTML
+//////////////////////////////////////////////////////////  -->
+
+<body onload="appStart()">
+    <div id="glCanvasArea" class="glCanvasStyle"></div>
+</body>
+
+</html>
