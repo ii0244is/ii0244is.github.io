@@ -1,0 +1,324 @@
+
+<html lang="en">
+
+<head>
+<meta charset="utf-8"/>
+</head>
+
+
+<style>
+body {
+    margin: 0px;
+    background-color: #eee;
+}
+
+.mainStyle 
+{
+    font-family: "palatino linotype", palatino, serif;
+    background-color: #fff;
+    width: 70%;
+    min-width: 850px;
+    max-width: 1400px;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+}
+
+.headerAreaStyle 
+{
+    background-color: #111;
+    color:#dedede;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.titleAreaStyle 
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.titleStyle 
+{
+    padding: 10px 0px 10px 20px;
+    font-size: 35px;
+}
+
+.headerButtonAreaStyle 
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.headerButtonStyle 
+{
+    padding: 0px 30px 0px 0px;
+}
+
+.headerButtonStyle:hover
+{
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.topImageAreaStyle
+{
+    width: 100%;
+}
+
+.messageAreaStyle
+{
+    width: 80%;
+    padding: 40px 0px 40px 0px;
+    margin: 0 auto;
+}
+
+.appAreaStyle
+{
+    width: 80%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 20px 0px 20px 0px;
+}
+
+.appStartButtonStyle
+{
+    background-Color : #55c;
+    color: #eee; 
+    height : 120px;
+    width : 240px;
+    font-size: 24px;
+    padding : 15px 15px 15px 15px;
+    border-radius: 20px;
+    border-style: none;
+}
+
+.appStartButtonStyle:hover
+{
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.spaceStyle
+{
+    width: 90%;
+    height: 40px;
+    margin: 0 auto;
+    border: 1px solid #ddd;
+    border-style: none none solid none;
+}
+
+.sampleContentsAreaTextStyle
+{
+    width: 100%;
+    margin: 0 auto;
+    font-size: 40px;
+    text-align: center;
+    padding: 40px 0px 40px 0px;
+}
+
+.sampleContentsAreaStyle
+{
+    width: 80%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 0px 0px 40px 0px;
+}
+
+.sampleContentStyle
+{
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    margin: 20px 5px 20px 5px;
+    border: 1px solid #ddd;
+}
+
+.sampleContentStyle:hover
+{
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.sampleContentImageStyle
+{
+    width: 320px;
+    height: 180px;
+}
+
+.sampleContentTextStyle
+{
+    width: 290px;
+    min-height: 80px;
+    padding: 10px 15px 10px 15px;
+    flex-direction: row;
+}
+
+.sampleContentTitleStyle
+{
+    font-size: 20px;
+    padding: 10px 0px 10px 0px;
+}
+
+.sampleContentBriefStyle
+{
+    font-size: 10px;
+    padding: 10px 0px 10px 0px;
+    text-overflow: ellipsis;
+}
+
+.footerAreaStyle 
+{
+    background-color: #111;
+    color:#dedede;
+    width: calc( 100% - 10px );
+    padding: 10px 0px 0px 10px;
+    height: 70px;
+}
+
+</style>
+
+<script type="text/javascript">
+
+function createTopPage()
+{
+    // header
+    let headerArea = document.getElementById("headerArea");
+    let titleArea = document.createElement("div");
+    titleArea.classList.add("titleAreaStyle");
+    let title = document.createElement("div");
+    title.classList.add("titleStyle");
+    title.textContent = "Digital Earth Archive";
+    titleArea.appendChild(title);
+    let headerButtonArea = document.createElement("div");
+    headerButtonArea.classList.add("headerButtonAreaStyle");
+    let userGuideButton = document.createElement("div");
+    userGuideButton.textContent = "USER GUIDE";
+    userGuideButton.classList.add("headerButtonStyle");
+    let githubButton = document.createElement("div");
+    githubButton.textContent = "GITHUB";
+    githubButton.classList.add("headerButtonStyle");
+    headerButtonArea.appendChild(userGuideButton);
+    headerButtonArea.appendChild(githubButton);
+    headerArea.appendChild(titleArea);
+    headerArea.appendChild(headerButtonArea);
+
+    // top image
+    let topImageArea = document.getElementById("topImageArea");
+    let topImage = document.createElement("img");
+    topImage.src = "image/topImage.png";
+    topImage.style.width = "100%";
+    topImage.style.maxHeight = "450px";
+    topImageArea.appendChild( topImage );
+
+    // message
+    let messageArea = document.getElementById("messageArea");
+
+    // application
+    let appArea = document.getElementById("appArea");
+    let editorButton = document.createElement("button");
+    editorButton.classList.add("appStartButtonStyle");
+    editorButton.textContent = "GET STARTED";
+    editorButton.onclick = function(){
+        location.href = "editor.html"; 
+    }
+    appArea.appendChild(editorButton);
+    let viewerButton = document.createElement("button");
+    viewerButton.classList.add("appStartButtonStyle");
+    viewerButton.textContent = "SEE YOUR DATAVIZ PROJECT";
+    viewerButton.onclick = function(){
+        location.href = "viewer.html"; 
+    }
+    appArea.appendChild(viewerButton);    
+
+    // sample
+    let sampleContentsArea = document.getElementById("sampleContentsArea");
+    let fileName = "projects/ContentsList.json";
+    let request = new window.XMLHttpRequest();
+    request.open("GET", fileName, true);
+    request.onreadystatechange = function(){
+        if( request.readyState == 4 )
+        {
+            let contents = JSON.parse( request.responseText );
+            // console.log(contents);       
+            createContentsSample(contents)
+        }
+    }
+    request.send(null);
+    function createContentsSample(contentsList)
+    {
+        for( let i = 0; i < contentsList.length; ++i )
+        { 
+            let sample = document.createElement("div");
+            sample.classList.add("sampleContentStyle");
+            sample.onclick = function(){
+                if( contentsList[i].file != "" ){
+                    location.href = "viewer.html#" + contentsList[i].file;
+                }else if( contentsList[i].link != "" ){
+                    location.href = contentsList[i].link;
+                }
+            }
+            let sampleImage = document.createElement("img");
+            sampleImage.classList.add("sampleContentImageStyle");
+            sampleImage.src = contentsList[i].image;
+            let sampleText = document.createElement("div");
+            sampleText.classList.add("sampleContentTextStyle");
+            let sampleTitle = document.createElement("div");
+            sampleTitle.classList.add("sampleContentTitleStyle");
+            sampleTitle.textContent = contentsList[i].title;
+            let sampleBrief = document.createElement("div");
+            sampleBrief.classList.add("sampleContentBriefStyle");
+            sampleBrief.innerHTML = contentsList[i].text;
+            sampleText.appendChild(sampleTitle);
+            sampleText.appendChild(sampleBrief);
+            sample.appendChild(sampleImage);
+            sample.appendChild(sampleText);
+            sampleContentsArea.appendChild(sample);
+        }          
+    }
+
+    // footer
+    let footerArea = document.getElementById("footerArea");
+}
+
+</script> 
+
+<!-- ////////////////////////////////////////////////////////// 
+    HTML
+//////////////////////////////////////////////////////////  -->
+
+<body onload="createTopPage()">
+    <div id="mainArea" class="mainStyle">
+        <div id="headerArea" class="headerAreaStyle"></div>
+        <div id="topImageArea" class="topImageAreaStyle"></div>
+        <div id="messageArea" class="messageAreaStyle">
+        Data visualization is viewed by many disciplines as a modern equivalent of visual communication. 
+        It involves the creation and study of the visual representation of data.
+        To communicate information clearly and efficiently, 
+        data visualization uses statistical graphics, plots, information graphics and other tools.
+        Numerical data may be encoded using dots, lines, or bars, to visually communicate a quantitative message.
+        Effective visualization helps users analyze and reason about data and evidence. 
+        It makes complex data more accessible, understandable and usable. 
+        Users may have particular analytical tasks, such as making comparisons or understanding causality,
+        and the design principle of the graphic (i.e., showing comparisons or showing causality) follows the task. 
+        </div>        
+        <div id="appArea" class="appAreaStyle"></div>
+        <div id="space" class="spaceStyle"></div>
+        <div id="sampleContentsAreaText" class="sampleContentsAreaTextStyle">
+        See What People Created.
+        </div>  
+        <div id="sampleContentsArea" class="sampleContentsAreaStyle"></div>        
+        <div id="footerArea" class="footerAreaStyle">Contact : ii0244is@gmail.com</div>    
+    </div>
+</body>
+
+</html>

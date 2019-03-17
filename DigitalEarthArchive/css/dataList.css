@@ -1,0 +1,86 @@
+
+.filterArea
+{
+    width:100%;
+    height:140px;
+    margin: 10px 0px 10px 0px;
+    display: flex;
+    flex-direction: column;
+}
+
+.filterCheckArea
+{
+    width: calc( 100% - 5px );
+    display: flex;
+    flex-direction: row;
+    margin: 0px 5px 0px 5px;
+    padding: 5px 0px 5px 0px;
+}
+
+.filterCheck
+{
+    height: 20px;
+}
+
+.keywordLabel
+{
+    display: flex;
+    margin: 0px 5px 0px 5px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.keywordSelectorArea
+{
+    width: 100%;
+    height: 100px;    
+    display: flex;
+    flex-direction: row;
+}
+
+.keywordSelector
+{
+    width:calc( 100% - 100px );
+    height:100%;
+    float: left;
+}
+
+.dataList
+{
+    width:100%;
+    height:calc( 100% - 190px );
+}
+
+.dataList_Head
+{
+    height: 32px;
+    display: flex;
+    flex-direction: row;
+    padding: 3px 0px 2px 0px;
+    background-color: #888;
+    color: #fff;
+}
+
+.dataList_Table
+{
+    height: 100%;
+    overflow-y: auto;
+    font-size: 14px;
+}
+
+.dataList_Row
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    border-bottom: 1px solid #666;
+}
+
+.dataList_Data
+{
+    padding: 2px 5px 2px 5px;
+    width: 40%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
