@@ -1,0 +1,90 @@
+
+<html lang="en">
+
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="css/main.css">
+<script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript" src="js/webGLCanvas.js"></script>
+<script type="text/javascript" src="js/LoadingView.js"></script>
+<script type="text/javascript" src="js/PropertyArea.js"></script>
+<script type="text/javascript" src="js/CountryListArea.js"></script>
+<script type="text/javascript" src="js/TimeSelector.js"></script>
+<script type="text/javascript" src="js/cameraWorkManager.js"></script>
+<script type="text/javascript" src="js/Utility/util.js"></script>
+<script type="text/javascript" src="js/Utility/glMatrix.js"></script>
+<script type="text/javascript" src="js/Utility/glUtilityFunc.js"></script>
+<script type="text/javascript" src="js/glObject/glObjectPolygon.js"></script>
+<script type="text/javascript" src="js/glObject/glObjectShapeJson_Line.js"></script>
+</head>
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    objectID 
+//////////////////////////////////////////////////////////  -->
+
+<script id='vertexShaderObjectMap' type="x-shader/x-vertex">
+attribute vec3 aVertexPosition;
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+
+void main()
+{
+    gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( aVertexPosition, 1.0 );
+}
+</script>
+    
+<script id='fragmentShaderObjectMap' type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 uObjectID;
+
+void main()
+{
+    gl_FragColor = uObjectID;
+}
+</script> 
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    single color 
+//////////////////////////////////////////////////////////  -->
+
+<script id='vertexShaderSingleColor' type="x-shader/x-vertex">
+attribute vec3 aVertexPosition;
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+
+void main()
+{
+    gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( aVertexPosition, 1.0 );
+}
+</script>
+
+<script id='fragmentShaderSingleColor' type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 uColor;
+uniform vec4 uParam;
+
+void main()
+{
+    float time = uParam.x;    
+    if( uParam.y > 0.5 ){
+        gl_FragColor = vec4( uColor.xyz * ( 1.0 + 0.3 * sin( time * 1.5 ) ), uColor.w );
+    }else{
+        gl_FragColor = uColor;
+    }
+}
+</script> 
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    HTML
+//////////////////////////////////////////////////////////  -->
+
+<body onload="appStart()">
+    <div id="glCanvasArea" class="glCanvasStyle"></div>
+</body>
+
+</html>
