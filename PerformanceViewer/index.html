@@ -1,0 +1,35 @@
+
+<hmtl>
+
+<head>
+<meta charset="utf-8"/>    
+<script type="text/javascript" src="PerformanceViewer.js"></script>
+<style media="screen">
+body {
+    background-color: #eee;
+    margin: 0px;
+}
+
+#FileInput {
+    background: #eee;
+    height: 30px;
+    display: block;
+    margin: 10px;
+}
+
+#PerformanceViewer {
+    background: #f8f8f8;
+    width: calc( 100% - 20px );
+    height: calc( 100% - 60px );
+    display: block;
+    margin: 10px 10px;
+}
+</style>
+</head>
+
+<body onload="appStart()">
+<input type="file" id="FileInput"/>
+<div id="PerformanceViewer"></div>
+<body>
+                
+</html>
