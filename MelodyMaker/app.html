@@ -1,0 +1,100 @@
+
+<hmtl>
+    
+<head>
+
+<meta charset="utf-8"/>    
+
+<link rel="stylesheet" type="text/css" href="css/ChordProgressionEditor.css">
+<link rel="stylesheet" type="text/css" href="css/AudioPlayerController.css">
+
+<script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript" src="js/ChordProgressionEditor.js"></script>
+<script type="text/javascript" src="js/MelodyMaker.js"></script>    
+<script type="text/javascript" src="js/WebAudioPlayer.js"></script>    
+<script type="text/javascript" src="js/AudioPlayerController.js"></script>  
+<script type="text/javascript" src="js/MusicScore.js"></script>    
+<script type="text/javascript" src="js/FileDownloader.js"></script>    
+
+<style media="screen">
+body {
+    background-color: #eee;
+    margin: 0px;
+    font-family: "Times New Roman";
+}
+    
+#mainArea {
+    width: 980px;
+    display: flex;
+    flex-direction: column;
+    margin: 0px auto;
+    background-color: #fff;
+}
+
+#TitleArea {
+    width: calc( 100% - 20px );
+    height: 70px;
+    background-color: #111;
+    color: #eee;
+    margin: 0px 0px 20px 0px;
+    padding: 0px 0px 0px 20px;
+}
+
+#ChordProgressionEditorArea {
+    width: calc( 100% - 40px );
+    margin: 0px 20px 0px 20px;
+}
+
+#PlayerArea {
+    width: 880px;
+    margin: 0px auto;
+}
+
+#MusicScoreArea {
+    width: 880px;
+    margin: 0px auto;
+}
+
+#Space {
+    width: calc( 100% - 40px );
+    height: 40px;
+    margin: 0px 20px 0px 20px;
+    border: 1px solid #ddd;
+    border-style: none none solid none;
+}
+
+#FileArea {
+    width: calc( 100% - 40px );
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin: 20px 20px 20px 20px;
+}
+
+#FooterArea {
+    width: calc( 100% - 20px );
+    height: 40px;
+    background-color: #111;
+    color: #eee;
+    margin: 20px 0px 0px 0px;
+    padding: 10px;
+}
+
+</style>
+
+</head>
+    
+<body onload="appStart()">
+    <div id="mainArea">
+        <div id="TitleArea"><h1>Melody Maker</h1></div>
+        <div id="ChordProgressionEditorArea"></div>
+        <div id="PlayerArea"></div>    
+        <div id="MusicScoreArea"></div>            
+        <div id="Space"></div>           
+        <div id="FileArea"></div>            
+        <div id="FooterArea">Contact : ii0244is@gmail.com</div>
+    </div>
+<body>
+                    
+</html>

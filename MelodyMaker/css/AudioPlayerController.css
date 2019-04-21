@@ -1,0 +1,15 @@
+
+.AudioPlayerButton{
+  background-color : #55e; 
+  color : #eee; 
+  padding : 15px 20px 15px 20px;
+  width : 80px;
+  margin : 0px 20px 0px 0px;
+  font-size: 30px;
+  border-radius: 10px;
+}
+
+.AudioPlayerButton:hover{
+  background-color : #99e; 
+  cursor: pointer;  
+}

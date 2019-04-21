@@ -1,0 +1,103 @@
+
+<html lang="en">
+
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+
+<script type="text/javascript">
+
+function createTopPage()
+{
+    // App start
+    let startButton = document.getElementById("AppStartButton");
+    startButton.onclick = function(){
+        location.href = "app.html"; 
+    }
+
+    // Sample Contents
+    let fileName = "sample/ContentsList.json";
+    let request = new window.XMLHttpRequest();
+    request.open("GET", fileName, true);
+    request.onreadystatechange = function(){
+        if( request.readyState == 4 )
+        {
+            let contents = JSON.parse( request.responseText );
+            console.log(contents);       
+            createSampleContents(contents)
+        }
+    }
+    request.send(null);    
+}
+
+function createSampleContents(contentsList)
+{
+    let sampleArea = document.getElementById( "SampleArea" );
+    let width = "180px"
+
+    for( let i in contentsList ){
+
+        let sampleContent = document.createElement("div");
+        sampleContent.style.width = width;
+        sampleContent.classList.add( "SampleContentStyle" );
+        sampleContent.onclick = function(){
+            location.href = "app.html#" + contentsList[i].file;
+        }
+
+        let thumbnailImage = document.createElement("img");
+        thumbnailImage.src = contentsList[i].image;
+        thumbnailImage.width = width;
+        thumbnailImage.height = width;
+        thumbnailImage.style.width = width;
+        thumbnailImage.style.height = width;
+        
+        let titleArea = document.createElement("div");
+        titleArea.innerHTML = contentsList[i].title;
+        titleArea.style.fontSize = "16px";
+        titleArea.style.padding = "10px 0px 0px 20px";   
+
+        let infoArea = document.createElement("div");
+        infoArea.innerHTML = contentsList[i].text;
+        infoArea.style.fontSize = "8px";
+        infoArea.style.padding = "5px 0px 10px 20px";          
+
+        sampleContent.appendChild(thumbnailImage);
+        sampleContent.appendChild(titleArea);
+        sampleContent.appendChild(infoArea);      
+        
+        sampleArea.appendChild(sampleContent);   
+    }    
+}
+
+</script> 
+
+<!-- ////////////////////////////////////////////////////////// 
+    HTML
+//////////////////////////////////////////////////////////  -->
+
+<body onload="createTopPage()">
+<div id="MainArea" class="MainAreaStyle">
+    <div id="TitleArea" class="TitleAreaStyle">Melody Maker</div>
+    <div id="TopImageArea" class="TopImageAreaStyle">
+        <img src="image/topImage.jpg" width="100%">
+    </div>    
+    <div id="AppArea" class="AppAreaStyle">
+        <div id="AppTextArea" class="AppTextAreaStyle" >    
+            Jazz is a music genre that originated in the African-American communities 
+            of New Orleans, United States, in the late 19th and early 20th centuries, 
+            and developed from roots in blues and ragtime. Jazz is seen by many as 
+            "America's classical music". Since the 1920s Jazz Age, jazz has become 
+            recognized as a major form of musical expression.
+        </div>    
+        <div id="AppStartButton" class="AppStartButtonStyle" >
+            <div>GET STARTED</div>
+        </div>   
+    </div>        
+    <div id="Space1" class="Space1"></div>    
+    <div id="SampleArea" class="SampleAreaStyle"></div>            
+    <div id="FooterArea" class="FooterAreaStyle">Contact : ii0244is@gmail.com</div>
+</div>
+</body>
+
+</html>

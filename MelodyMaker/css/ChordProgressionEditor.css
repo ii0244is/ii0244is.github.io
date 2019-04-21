@@ -1,0 +1,6 @@
+
+.Right-Triangle{
+    background:
+      linear-gradient(to bottom left, rgba(255,255,255,0) 50%, #44f 50.5%) no-repeat top left/100% 50%,
+      linear-gradient(to top left, rgba(255,255,255,0) 50%, #44f 50.5%) no-repeat bottom right/100% 50%;
+}

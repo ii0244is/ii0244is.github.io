@@ -1,0 +1,25 @@
+[
+    { "name":"DonnaLee", "image":"image/DonnaLee.jpg", 
+      "title":"Donna Lee", "file":"DonnaLee" ,    
+      "text":"Charlie Parker" },
+
+    { "name":"Daahoud", "image":"image/Daahoud.jpeg", 
+      "title": "Daahoud", "file":"Daahoud" ,    
+      "text":"Clifford Brown" },
+
+    { "name":"AutumnLeaves", "image":"image/AutumnLeaves.jpg", 
+      "title":"Autumn Leaves", "file":"AutumnLeaves" ,    
+      "text":"Joseph Kosma" },
+
+    { "name":"BlueBossa", "image":"image/BlueBossa.jpg", 
+      "title": "Blue Bossa", "file":"BlueBossa" ,    
+      "text":"Kenny Dorham" },    
+      
+    { "name":"Cute", "image":"image/Cute.jpg", 
+      "title":"Cute", "file":"Cute" ,    
+      "text":"Neal Hefti" },
+
+    { "name":"SoWhat", "image":"image/SoWhat.jpg", 
+      "title": "So What", "file":"SoWhat" ,    
+      "text":"Miles Davis" }          
+]
