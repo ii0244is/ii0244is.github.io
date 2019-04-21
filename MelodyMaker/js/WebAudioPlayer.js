@@ -43,8 +43,13 @@ let WebAudioPlayer = function()
 
 WebAudioPlayer.prototype.addPart = function( name, volume, octave )
 {
-    if( this.audioCtx == null ){
-        this.audioCtx = new AudioContext();
+    try {
+        if( this.audioCtx == null ){
+            window.AudioContext = window.AudioContext||window.webkitAudioContext;
+            this.audioCtx = new AudioContext();
+        }
+    }catch(e) {
+        alert('Web Audio API is not supported in this browser');
     }
 
     let part = {}
