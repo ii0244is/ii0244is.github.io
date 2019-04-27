@@ -17,8 +17,8 @@ let AudioPlayerController = function()
     this.stopButton.textContent = "STOP";    
 
     this.BPMInput = new AudioPlayerParameter( "BPM", "number" );
-    this.BPMInput.paramInput.max = 300;
-    this.BPMInput.paramInput.min = 30;
+    this.BPMInput.paramInput.max = 360;
+    this.BPMInput.paramInput.min = 60;
     this.BPMInput.setValue( 180 );
     
     this.BassStyleInput = new AudioPlayerParameter( "Bass Style", "select" );    
@@ -38,13 +38,13 @@ let AudioPlayerController = function()
     this.MainVolumeInput.paramInput.max = 1.0;   
     this.MainVolumeInput.paramInput.min = 0.0;    
     this.MainVolumeInput.paramInput.step = 0.01;        
-    this.MainVolumeInput.setValue( 0.3 );    
+    this.MainVolumeInput.setValue( 0.5 );    
 
     this.BassVolumeInput = new AudioPlayerParameter( "Bass Volume", "range" );
     this.BassVolumeInput.paramInput.max = 1.0;   
     this.BassVolumeInput.paramInput.min = 0.0;   
     this.BassVolumeInput.paramInput.step = 0.01;         
-    this.BassVolumeInput.setValue( 0.6 );    
+    this.BassVolumeInput.setValue( 0.5 );    
 
     this.playerArea = document.createElement("div");
     this.playerArea.style.display = "flex";

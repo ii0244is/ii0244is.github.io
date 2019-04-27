@@ -62,15 +62,21 @@ MelodyMaker.prototype.setChordProgression = function( chordProgression ){
     }
 
     let ScaleNoteInterval = {
-        "Ionian"     : [ 0, 2, 4, 5, 7, 9, 11 ], 
-        "Dorian"     : [ 0, 2, 3, 5, 7, 9, 10 ], 
-        "Phrygian"   : [ 0, 1, 3, 5, 7, 8, 10 ], 
-        "Lydian"     : [ 0, 2, 4, 6, 7, 9, 11 ], 
-        "Mixolydian" : [ 0, 2, 4, 5, 7, 9, 10 ], 
-        "Aeorian"    : [ 0, 2, 3, 5, 7, 8, 10 ], 
-        "Locrian"    : [ 0, 1, 3, 5, 6, 8, 10 ], 
-        "HMP5b"      : [ 0, 1, 4, 5, 7, 8, 10 ], 
-        "Lydian7th"  : [ 0, 2, 4, 6, 7, 9, 10 ],
+        "Ionian"         : [ 0, 2, 4, 5, 7, 9, 11 ], 
+        "Dorian"         : [ 0, 2, 3, 5, 7, 9, 10 ], 
+        "Phrygian"       : [ 0, 1, 3, 5, 7, 8, 10 ], 
+        "Lydian"         : [ 0, 2, 4, 6, 7, 9, 11 ], 
+        "Mixolydian"     : [ 0, 2, 4, 5, 7, 9, 10 ], 
+        "Aeorian"        : [ 0, 2, 3, 5, 7, 8, 10 ], 
+        "Locrian"        : [ 0, 1, 3, 5, 6, 8, 10 ], 
+        "MelodicMinor"   : [ 0, 2, 3, 5, 7, 9, 11 ],
+        "Lydian7th"      : [ 0, 2, 4, 6, 7, 9, 10 ],
+        "Altered"        : [ 0, 1, 3, 4, 6, 8, 10 ], 
+        "HMP5b"          : [ 0, 1, 4, 5, 7, 8, 10 ], 
+        "Locrian#2"      : [ 0, 2, 3, 5, 6, 8, 10 ], 
+        "WholeTone"      : [ 0, 2, 4, 6, 8, 10 ], 
+        "H/W_Diminished" : [ 0, 1, 3, 4, 6, 7, 9, 10 ], 
+        "W/H_Diminished" : [ 0, 2, 3, 5, 6, 8, 9, 11 ], 
     }
 
     for( let i in this.chordProgression )
@@ -150,28 +156,7 @@ MelodyMaker.prototype.getMelodyLine = function(){
 }
 
 MelodyMaker.prototype.getBassLine = function(){
-    let line = [];
-    let chordTone = this.chordInfoArray[ this.currentChord ].chordTone;
-    if( this.bassStyle == "latin"){
-        line[0] = chordTone.root;
-        line[1] = NOTE_REST;
-        line[2] = NOTE_REST;
-        line[3] = chordTone.fifth;
-        line[4] = NOTE_REST;
-        line[5] = NOTE_REST;
-        line[6] = chordTone.root;
-        line[7] = NOTE_REST;
-    }else{
-        line[0] = chordTone.root;
-        line[1] = NOTE_REST;
-        line[2] = chordTone.third;
-        line[3] = NOTE_REST;
-        line[4] = chordTone.fifth;
-        line[5] = NOTE_REST;
-        line[6] = chordTone.root;
-        line[7] = NOTE_REST;
-    }
-    return line;
+    return this.generateBassLine( this.currentChord )
 }
 
 MelodyMaker.prototype.clearMelodyLine = function(){
@@ -205,7 +190,7 @@ MelodyMaker.prototype.generateMelodyLine = function( chordIndex ){
     let scale = this.chordInfoArray[ chordIndex ].scaleNote;
     let chordToneIndex = this.chordInfoArray[ chordIndex ].chordToneIndex;    
     for( let i in melodyLine ) {
-        randomVal = Math.floor(Math.random() * 8 );
+        randomVal = Math.floor(Math.random() * 8);
 
         let isChordTone = false;
         for( let j in chordToneIndex ){
@@ -250,11 +235,11 @@ MelodyMaker.prototype.notApproachLine = function ( chordIndex )
 
 MelodyMaker.prototype.approachLine = function ( targetNote, chordIndex )
 {
-    let randomVal = Math.floor(Math.random() * 2);
-    if (randomVal % 2 === 0){
-        return this.approach( targetNote, chordIndex );
-    }else{
+    let randomVal = Math.floor(Math.random() * 3);
+    if (randomVal % 3 === 0){
         return this.resolve3( targetNote, chordIndex );
+    }else{
+        return this.approach( targetNote, chordIndex );
     }       
 }
 
@@ -288,7 +273,6 @@ MelodyMaker.prototype.resolve1 = function ( chordIndex )
 
     for( let i = stopPos - 1; i >= 4; --i ){
         let interval = this.randomSmallInterval();
-        let lastTargetNoteIndex = targetNoteIndex;
         if( isUpLine ){
             targetNoteIndex = targetNoteIndex - interval;
         }else{
@@ -302,7 +286,6 @@ MelodyMaker.prototype.resolve1 = function ( chordIndex )
     line = this.randomLine( melodyLine[4] );
     count = 3;    
     for( let i = 3; i >= 0; --i ){
-        let lastTargetNoteIndex = targetNoteIndex;
         if( line[count].isUp ){
             targetNoteIndex = targetNoteIndex - line[count].interval;
         }else{
@@ -341,6 +324,10 @@ MelodyMaker.prototype.resolve2 = function ( chordIndex )
         targetNoteIndex = Number( this.chordInfoArray[ chordIndex ].chordToneIndex.root[0] );
         targetNote -= 12;
     }
+    let isHeighNote = false;
+    if( targetNote > 12 ){
+        isHeighNote = true;
+    }
     melodyLine[stopPos1] = targetNote;    
 
     let isUpLine = true;
@@ -350,7 +337,6 @@ MelodyMaker.prototype.resolve2 = function ( chordIndex )
 
     for( let i = stopPos1 - 1; i > stopPos2; --i ){
         let interval = this.randomSmallInterval();
-        let lastTargetNoteIndex = targetNoteIndex;
         if( isUpLine ){
             targetNoteIndex = targetNoteIndex - interval;
         }else{
@@ -364,7 +350,7 @@ MelodyMaker.prototype.resolve2 = function ( chordIndex )
     melodyLine[stopPos2] = NOTE_REST;     
 
     rootIndex = 0;
-    if( Math.random() * 2 > 1 ){
+    if( isHeighNote ){
         rootIndex = 1;
     }
     targetNoteIndex = Number( this.chordInfoArray[ chordIndex ].chordToneIndex.root[rootIndex] );
@@ -377,7 +363,6 @@ MelodyMaker.prototype.resolve2 = function ( chordIndex )
 
     for( let i = stopPos2 - 1; i >= 0; --i ){
         let interval = this.randomSmallInterval();
-        let lastTargetNoteIndex = targetNoteIndex;
         if( isUpLine ){
             targetNoteIndex = targetNoteIndex - interval;
         }else{
@@ -395,7 +380,6 @@ MelodyMaker.prototype.resolve3 = function ( targetNote, chordIndex )
 {   
     let melodyLine = [];
     let scaleNote = this.chordInfoArray[ chordIndex ].scaleNote;
-    let chordToneIndex = this.chordInfoArray[ chordIndex ].chordToneIndex;
 
     let isUpLine = true;
     if( NOTE_Bb_0 > targetNote ){
@@ -409,7 +393,6 @@ MelodyMaker.prototype.resolve3 = function ( targetNote, chordIndex )
     let line = this.randomLine( target );
     let count = 2;
     for( let i = 6; i >= 4; --i ){
-        let lastTargetNoteIndex = targetNoteIndex;
         if( line[count].isUp ){
             targetNoteIndex = targetNoteIndex - line[count].interval;
         }else{
@@ -510,10 +493,89 @@ MelodyMaker.prototype.approach = function ( targetNote, chordIndex )
     return melodyLine
 }
 
+MelodyMaker.prototype.generateBassLine = function( chord )
+{
+    let line = [];
+    if( this.bassStyle == "latin"){
+        line = this.generateLatinBassLine( chord );
+    }else{
+        line = this.generate4beatBassLine( chord );
+    }
+    return line;
+}
+
+MelodyMaker.prototype.generateLatinBassLine = function( chord )
+{
+    let chordTone = this.chordInfoArray[ chord ].chordTone;
+    let line = [];
+    {      
+        line[0] = chordTone.root;
+        line[1] = NOTE_EXTEND;
+        line[2] = NOTE_REST;
+        line[3] = chordTone.fifth;
+        line[4] = NOTE_EXTEND;
+        line[5] = NOTE_REST;
+        line[6] = chordTone.root;
+        line[7] = NOTE_EXTEND;
+    }
+    return line;
+}
+
+MelodyMaker.prototype.generate4beatBassLine = function( chord )
+{
+    let chordTone = this.chordInfoArray[ chord ].chordTone;
+    let nextChordTone = this.chordInfoArray[ this.getNextChord( chord ) ].chordTone;
+    let line = [];
+    let randomVal = Math.floor(Math.random() * 6);
+    if( randomVal < 2 ){
+        line[0] = chordTone.root;
+        line[1] = NOTE_REST;
+        line[2] = chordTone.third;
+        line[3] = NOTE_REST;
+        line[4] = chordTone.fifth;
+        line[5] = NOTE_REST;
+        line[6] = chordTone.root;
+        line[7] = NOTE_REST;
+    }else if( randomVal < 3 ){
+        line[0] = chordTone.root;
+        line[1] = NOTE_REST;
+        line[2] = chordTone.third;
+        line[3] = NOTE_REST;
+        line[4] = nextChordTone.root - 2;
+        line[5] = NOTE_REST;
+        line[6] = nextChordTone.root - 1;
+        line[7] = NOTE_REST;
+    }else if( randomVal < 4 ){
+        line[0] = chordTone.root;
+        line[1] = NOTE_REST;
+        line[2] = chordTone.third;
+        line[3] = NOTE_REST;
+        line[4] = nextChordTone.root + 2;
+        line[5] = NOTE_REST;
+        line[6] = nextChordTone.root + 1;
+        line[7] = NOTE_REST;      
+    }else{
+        line[0] = chordTone.root;
+        line[1] = NOTE_REST;
+        line[2] = chordTone.root;
+        line[3] = NOTE_REST;
+        line[4] = chordTone.fifth;
+        line[5] = NOTE_REST;
+        line[6] = chordTone.root;
+        line[7] = NOTE_REST;
+    }
+
+    line[1] = NOTE_EXTEND;
+    line[3] = NOTE_EXTEND;
+    line[5] = NOTE_EXTEND;        
+    line[7] = NOTE_EXTEND;
+
+    return line;
+}
 
 MelodyMaker.prototype.randomSmallInterval = function ()
 {
-    let randomVal = Math.floor(Math.random() * 30 );
+    let randomVal = Math.floor(Math.random() * 28 );
     if( randomVal < 20 ){
         return 1;
     }else if ( randomVal < 29 ){
@@ -526,8 +588,8 @@ MelodyMaker.prototype.randomSmallInterval = function ()
 
 MelodyMaker.prototype.randomLargeInterval = function ()
 {
-    let randomVal = Math.floor(Math.random() * 27 );
-    if( randomVal < 6 ){
+    let randomVal = Math.floor(Math.random() * 20 );
+    if( randomVal < 4 ){
         return 1;
     }else if ( randomVal < 12 ){
         return 2;        
@@ -552,11 +614,22 @@ MelodyMaker.prototype.randomLine = function ( targetNote )
         isUpLine = false;
     }
 
-    let line = [];
+    let AdjustRandomVal = 10;
+    if( isUpLine ){
+        if( NOTE_F_1 < targetNote ){
+            AdjustRandomVal = 7;
+        }
+    }else{
+        if( targetNote < NOTE_E_0 ){
+            AdjustRandomVal = 7;
+        }
+    }
 
-    let randomVal = Math.floor(Math.random() * 10 );
+    let randomVal = Math.floor(Math.random() * AdjustRandomVal );
+
+    let line = [];
     if( isUpLine ){    
-        if( randomVal < 4 ){
+        if( randomVal < 5 ){
             line[0] = { "isUp": true, "interval": this.randomSmallInterval() };
             line[1] = { "isUp": true, "interval": this.randomSmallInterval() };
             line[2] = { "isUp": true, "interval": this.randomSmallInterval() };
@@ -578,7 +651,7 @@ MelodyMaker.prototype.randomLine = function ( targetNote )
             line[3] = { "isUp": true,  "interval": this.randomSmallInterval() };
         }
     }else{    
-        if( randomVal < 4 ){
+        if( randomVal < 5 ){
             line[0] = { "isUp": false, "interval": this.randomSmallInterval() };
             line[1] = { "isUp": false, "interval": this.randomSmallInterval() };
             line[2] = { "isUp": false, "interval": this.randomSmallInterval() };
@@ -637,12 +710,8 @@ MelodyMaker.prototype.searchNearestChordToneIndex = function ( targetNote, scale
         for( let j in indexList )
         {
             let toneIndex = Number( indexList[j] )
-            let interval = targetNote - scale[ toneIndex ];
-            if( !isUpLine ){
-                interval = scale[ toneIndex ] - targetNote;
-            }
-
-            if( interval < minInterval && interval >= 0 ){
+            let interval = Math.abs( targetNote - scale[ toneIndex ] );
+            if( interval < minInterval ){
                 minInterval = interval;
                 index = toneIndex;
             }

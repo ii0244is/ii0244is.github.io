@@ -1,6 +1,4 @@
 
-let NOTE_NONE = -100;    
-let NOTE_REST = -100;   
 let NOTE_C_0  = 0;
 let NOTE_Db_0 = 1;
 let NOTE_D_0  = 2;
@@ -29,6 +27,10 @@ let NOTE_C_2  = 24;
 let NOTE_Db_2 = 25;
 let NOTE_D_2  = 26;
 
+let NOTE_NONE   = -100;    
+let NOTE_REST   = -100;
+let NOTE_EXTEND = -50;
+
 let WebAudioPlayer = function()
 {
     this.audioCtx = null;
@@ -39,6 +41,7 @@ let WebAudioPlayer = function()
     this.count = 0;
     this.parts = {};
     this.isSwinging = true;
+    this.timerID = null;
 }
 
 WebAudioPlayer.prototype.addPart = function( name, volume, octave )
@@ -108,7 +111,17 @@ WebAudioPlayer.prototype.play = function( callbackFunc )
         let part = this.parts[ name ];
         let note = part.notes[ this.count ];
         
-        if( part.mute || note == NOTE_REST || this.soundOff ){
+        let isExtend = false;
+        if( this.count < 7 ){
+            let nextnote = part.notes[ this.count + 1 ];
+            if( nextnote == NOTE_EXTEND ){
+                isExtend = true;
+            }
+        }
+
+        if( isExtend ){
+            part.gain.gain.setTargetAtTime( part.volume, currentTime, timeConst );
+        }else if( part.mute || note == NOTE_REST || this.soundOff ){
             part.gain.gain.setTargetAtTime( 0.0, currentTime, timeConst );
         }else{
             part.gain.gain.setTargetAtTime( part.volume, currentTime, timeConst );
@@ -122,14 +135,16 @@ WebAudioPlayer.prototype.play = function( callbackFunc )
         }else if( part.octave == 1 ){
             octaveFactor *= 2;
         }
-        let freq = this.noteToFreq(note) * octaveFactor;
 
-        part.osc.frequency.setTargetAtTime( freq, currentTime, timeConst);
+        if( note != NOTE_EXTEND ){
+            let freq = this.noteToFreq(note) * octaveFactor;
+            part.osc.frequency.setTargetAtTime( freq, currentTime, timeConst);
+        }
     }
 
     if( this.soundOff ){
         this.soundOff = false;
-        setTimeout( this.play.bind(this), interval / 4, callbackFunc );
+        this.timerID = setTimeout( this.play.bind(this), interval / 4, callbackFunc );
         ++this.count;
     }else{
         this.soundOff = true;
@@ -141,7 +156,7 @@ WebAudioPlayer.prototype.play = function( callbackFunc )
                 time *= 2 / 3;
             }
         }
-        setTimeout( this.play.bind(this), time, callbackFunc );
+        this.timerID = setTimeout( this.play.bind(this), time, callbackFunc );
     }
 }
 
@@ -152,6 +167,9 @@ WebAudioPlayer.prototype.pause = function()
 
 WebAudioPlayer.prototype.stop = function()
 {
+    if( this.timerID ){
+        clearTimeout( this.timerID );
+    }
     for( let name in this.parts ){
         let part = this.parts[ name ];
         part.osc.stop();

@@ -209,8 +209,10 @@ let ChordInput = function( number )
         },
         {
             name:"scale", label:"Scale", type:"select",
-            values:[ "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian",
-                     "Aeorian", "Locrian", "HMP5b", "Lydian7th" ]            
+            values:[ "Ionian", "Dorian", "Phrygian", "Lydian", 
+                     "Mixolydian", "Aeorian", "Locrian", "MelodicMinor", 
+                     "Lydian7th", "Altered", "HMP5b", "Locrian#2",     
+                     "WholeTone", "H/W_Diminished", "W/H_Diminished" ]            
         }
     ]
 
