@@ -16,6 +16,7 @@ glObjectBgImage = function ( glCanvas )
     
     this.isImageSet = false;
 
+    this.type = "image";
     this.luminance = 1.0;
     this.previousLuminance = 1.0;
     this.animationStartTime = 0.0;
@@ -141,6 +142,11 @@ glObjectBgImage.prototype.setLuminance = function ( val )
     this.animationStart = true;
 }
 
+glObjectBgImage.prototype.setType = function ( type )
+{
+    this.type = type;
+}
+
 glObjectBgImage.prototype.drawObjectIDMap = function ( glContext )
 {
 }
@@ -154,31 +160,54 @@ glObjectBgImage.prototype.draw = function ( glContext, time )
 
     gl.useProgram(glShader);
 
+    // blend
+    gl.enable(gl.BLEND);    
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
     // shader variable
     glShader.aPosition = gl.getAttribLocation(glShader, "aVertexPosition");
     glShader.aUV       = gl.getAttribLocation(glShader, "aVertexUV");
     glShader.uTexture  = gl.getUniformLocation(glShader, "uTexture");
     glShader.uParam    = gl.getUniformLocation(glShader, "uParam");
-    
+    glShader.uColor    = gl.getUniformLocation(glShader, "uColor");
+
 	// Texture Image
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, this.texture);
 	gl.uniform1i(glShader.uTexture, 0);
 
-    // animation parameter
-    var param = [ this.luminance, 0.0, 0.0, 0.0 ];
+    // animation 
     if( this.animationStart )
     {
         this.animationStartTime = time;
         this.animationStart = false;
     }
-    if( time - this.animationStartTime < 250 )
-    {
+
+    // luminance 
+    let luminance = this.luminance;
+    if( time - this.animationStartTime < 250 ){
         let rate = ( time - this.animationStartTime ) / 250;
         let diff = this.luminance - this.previousLuminance;
-        param[0] = rate * diff + this.previousLuminance;
+        luminance  = rate * diff + this.previousLuminance;
     }
+
+    // type
+    let type = 0.0;
+    if( this.type == "image" ){
+        type = 0.0;
+    }else if( this.type == "gradation" ){
+        type = 1.0;
+    }else if( this.type == "singleColor" ){
+        type = 2.0;
+    }
+
+    // param
+    let param = [ luminance, type, 0.0, 0.0 ];
     gl.uniform4fv(glShader.uParam, param);
+
+    // color
+    let color =[ this.colorR, this.colorG, this.colorB, this.colorA ];
+    gl.uniform4fv(glShader.uColor, color);
 
     // draw
     gl.enableVertexAttribArray(glShader.aPosition);

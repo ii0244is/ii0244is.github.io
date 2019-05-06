@@ -1,5 +1,5 @@
 
-let cameraWorkManager = function ()
+let CameraWorkManager = function ()
 {
     this.targetPosition = {};
     this.targetCameraPose = {};
@@ -11,7 +11,7 @@ let cameraWorkManager = function ()
     this.isCameraPoseHAdd = true;
 }
 
-cameraWorkManager.prototype.startTransition = function ( targetX, targetZ, time, distance )
+CameraWorkManager.prototype.startTransition = function ( targetX, targetZ, time, distance )
 {
     this.targetPosition.x = targetX;
     this.targetPosition.z = targetZ;
@@ -60,13 +60,10 @@ cameraWorkManager.prototype.startTransition = function ( targetX, targetZ, time,
     this.a_h = ( this.targetCameraPose.h - this.startCameraPose.h ) / this.transitionTime;
 }
 
-cameraWorkManager.prototype.updateCameraPosition = function ()
+CameraWorkManager.prototype.updateCameraPosition = function ()
 {
     if( this.isTransitionFinished ) return;
 
-    let currentCameraPosV = g_webGLView.cameraPosV;
-    let currentCameraPosH = g_webGLView.cameraPosH;
-    let currentCameraPosR = g_webGLView.cameraPosR;
     let currentPosX = g_webGLView.targetPosX;
     let currentPosZ = g_webGLView.targetPosZ;
 

@@ -1,6 +1,6 @@
 
 
-pointIconManager = function ()
+PointIconManager = function ()
 {
     this.iconList = [
         { name:"pointerRed", url:"image/pointerRed.png" },
@@ -43,12 +43,12 @@ pointIconManager = function ()
     }    
 }
 
-pointIconManager.prototype.getIconSelectorDom = function ()
+PointIconManager.prototype.getIconSelectorDom = function ()
 {
     return this.iconSelector;
 }
 
-pointIconManager.prototype.setIcon = function (name)
+PointIconManager.prototype.setIcon = function (name)
 {
     if( this.selectedIconName )
     {
@@ -58,12 +58,12 @@ pointIconManager.prototype.setIcon = function (name)
     this.selectedIconName = name;
 }
 
-pointIconManager.prototype.getSelectedIcon = function ()
+PointIconManager.prototype.getSelectedIcon = function ()
 {
     return this.selectedIconName;
 }
 
-pointIconManager.prototype.setIconChangeCallback = function (callback)
+PointIconManager.prototype.setIconChangeCallback = function (callback)
 {
     this.callback = callback;
 }

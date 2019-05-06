@@ -121,44 +121,40 @@ CameraController.prototype.getCameraPosition = function()
 
 CameraController.prototype.calcRay = function( screenX, screenY )
 {
-    let x = screenX;
-    let y = screenY;
-
-    // calc camera vector
-    let vecCameraToTarget = [ -this.cameraPos[0], -this.cameraPos[1], -this.cameraPos[2] ];
-
-    // calc rotation axis
-    let targetRay = vec3.create( [0, 0, 0] );
-    vec3.normalize( vecCameraToTarget, targetRay );
-    let upVec = vec3.create( this.cameraUpVec );
-    let cameraSideVec = vec3.create();
-    let cameraUpVec = vec3.create();
-    vec3.cross( targetRay, upVec, cameraSideVec );
-    vec3.normalize( cameraSideVec, cameraSideVec );
-    vec3.cross( targetRay, cameraSideVec, cameraUpVec );    
-    vec3.normalize( cameraUpVec, cameraUpVec );
-
-    // calc rotation
-    let fovy = this.fovy;
-    let fovx = fovy * this.width / this.height;
-    let rotUp = ( x - this.width / 2 ) / this.width * fovx;
-    let rotSide = ( y - this.height / 2 ) / this.height * fovy;
+    let viewMat = mat4.create();
+    mat4.lookAt( this.cameraPos, [ 0, 0, 0 ], [ 0, 1, 0 ], viewMat );
     
-    // rotate vector
-    let tempMat = mat4.create();   
-    mat4.identity(tempMat);
-    let rotMatSideAxis = mat4.create();
-    mat4.rotate( tempMat, - rotSide * 3.141592 / 180, cameraSideVec, rotMatSideAxis );    
-    let rotateAxis = vec3.create();
-    mat4.multiplyVec3( rotMatSideAxis, cameraUpVec, rotateAxis );
-    let rotMatUpAxis = mat4.create();    
-    mat4.rotate( tempMat, rotUp * 3.141592 / 180, rotateAxis, rotMatUpAxis );    
-    let rotMat = mat4.create();
-    mat4.multiply( rotMatUpAxis, rotMatSideAxis, rotMat );
-    let hitPointRay = vec3.create( [0, 0, 0] );    
-    mat4.multiplyVec3( rotMat, targetRay, hitPointRay );
-    
-    return hitPointRay;
+    let projMat = mat4.create();
+    let fovy = 40;
+    let near = 0.05;
+    let far  = 500;
+    mat4.perspective(fovy, g_canvas.width / g_canvas.height, near, far, projMat);
+
+    let width = g_canvas.width;
+    let height = g_canvas.height
+    let screenPosX = ( screenX * 2.0 - width ) / width;
+    let screenPosY = -( screenY * 2.0 - height ) / height;
+    let screenPos = [ screenPosX, screenPosY, 1.0, 1.0 ];
+
+    let invView = mat4.create();
+    let invProj = mat4.create();
+    let invMat = mat4.create();
+    mat4.inverse( viewMat, invView );
+    mat4.inverse( projMat, invProj );
+    mat4.multiply( invView, invProj, invMat );
+    let pos4 = [ 0.0, 0.0, 0.0, 0.0 ];
+    mat4.multiplyVec4( invMat, screenPos, pos4 );
+    let pos3 = vec3.create( [ pos4[0]/pos4[3], pos4[1]/pos4[3], pos4[2]/pos4[3] ] );
+
+    let posX = this.cameraPos[0];
+    let posY = this.cameraPos[1];
+    let posZ = this.cameraPos[2];
+
+    let ray3 = vec3.create( [ pos3[0] - posX, pos3[1] - posY , pos3[2] - posZ ] );
+    let ray = vec3.create();
+    vec3.normalize( ray3, ray );
+
+    return ray;
 }
 
 CameraController.prototype.calcHitPoint = function( o, r )

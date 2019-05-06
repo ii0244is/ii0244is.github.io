@@ -123,6 +123,10 @@ glObjectPointer.prototype.draw = function ( glContext, time )
 
     gl.useProgram(glShader);
 
+    // blend
+    gl.enable(gl.BLEND);    
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);    
+
     // shader variable
     glShader.aPos = gl.getAttribLocation(glShader, "aVertexPosition");
     glShader.uMWMatrix = gl.getUniformLocation(glShader, "uMWMatrix");

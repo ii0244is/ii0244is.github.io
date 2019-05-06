@@ -1,5 +1,42 @@
 
 ////////////////////////////////////////////////////////
+// Json Data Request
+////////////////////////////////////////////////////////
+
+function requestJsonData( fileName, callback )
+{
+    let request = new window.XMLHttpRequest();
+    request.open("GET", fileName, true);
+    request.onreadystatechange = function(){
+        if( request.readyState == 4 )
+        {
+            let data = JSON.parse( request.responseText );
+            // console.log(data);
+            if( callback ) callback( data );
+        }
+    }
+    request.send(null);   
+}
+
+////////////////////////////////////////////////////////
+// Rect
+////////////////////////////////////////////////////////
+
+function addDate( year, month, day, diffYear, diffMonth, diffDay )
+{
+    currentTime = new Date(year, month-1, day);
+    currentTime.setFullYear( currentTime.getFullYear() + diffYear );
+    currentTime.setMonth( currentTime.getMonth() + diffMonth );
+    currentTime.setDate( currentTime.getDate() + diffDay );
+
+    let val = {}
+    val.year  = currentTime.getFullYear();
+    val.month = currentTime.getMonth() + 1;
+    val.day   = currentTime.getDate();
+    return val;
+}
+
+////////////////////////////////////////////////////////
 // Rect
 ////////////////////////////////////////////////////////
 

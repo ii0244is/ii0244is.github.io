@@ -229,14 +229,14 @@ function createTopPage()
     editorButton.classList.add("appStartButtonStyle");
     editorButton.textContent = "GET STARTED";
     editorButton.onclick = function(){
-        location.href = "editor.html"; 
+        location.href = "app.html"; 
     }
     appArea.appendChild(editorButton);
     let viewerButton = document.createElement("button");
     viewerButton.classList.add("appStartButtonStyle");
     viewerButton.textContent = "SEE YOUR DATAVIZ PROJECT";
     viewerButton.onclick = function(){
-        location.href = "viewer.html"; 
+        location.href = "app.html#ViewerMode"; 
     }
     appArea.appendChild(viewerButton);    
 
@@ -262,7 +262,7 @@ function createTopPage()
             sample.classList.add("sampleContentStyle");
             sample.onclick = function(){
                 if( contentsList[i].file != "" ){
-                    location.href = "viewer.html#" + contentsList[i].file;
+                    location.href = "app.html#" + contentsList[i].file;
                 }else if( contentsList[i].link != "" ){
                     location.href = contentsList[i].link;
                 }
