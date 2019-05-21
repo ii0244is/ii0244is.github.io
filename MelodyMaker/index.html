@@ -33,8 +33,8 @@ function createTopPage()
 
 function createSampleContents(contentsList)
 {
-    let sampleArea = document.getElementById( "ContentsListArea" );
-    let width = "220px"
+    let sampleArea = document.getElementById( "SampleArea" );
+    let width = "180px"
 
     for( let i in contentsList ){
 
@@ -78,45 +78,22 @@ function createSampleContents(contentsList)
 
 <body onload="createTopPage()">
 <div id="MainArea" class="MainAreaStyle">
-
-<div id="TitleArea" class="TitleAreaStyle">Melody Maker</div>
-
-<div id="AppArea" class="AppAreaStyle">
-    <div id="AppStartArea" class="AppStartAreaStyle">
-        <div id="AppText" class="AppTextStyle" >    
-            Melody Maker is music creation tool for jazz composer.<br><br>
-            Invents melodic solo lines over a chord progression you create.
+    <div id="TitleArea" class="TitleAreaStyle">Melody Maker</div>
+    <div id="TopImageArea" class="TopImageAreaStyle">
+        <img src="image/topImage.jpg" width="100%">
+    </div>    
+    <div id="AppArea" class="AppAreaStyle">
+        <div id="AppTextArea" class="AppTextAreaStyle" >    
+            Melody Maker is music creation tool for jazz composer.
+            It invents melodic solo lines over a chord progression you create.
         </div>    
         <div id="AppStartButton" class="AppStartButtonStyle" >
             <div>GET STARTED</div>
         </div>   
-    </div>
-</div>
-
-<div id="CreditsArea" class="CreditsAreaStyle">
-    Image by <a href="https://pixabay.com/users/tommyvideo-3092371/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=image&amp;utm_content=3908684">Tomislav Jakupec</a> from <a href="https://pixabay.com/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=image&amp;utm_content=3908684">Pixabay</a>
-</div>
-
-<div id="Space1" class="Space1"></div>
-
-<div id="AppImageArea" class="AppImageAreaStyle">
-    <div id="UsageArea" class="UsageAreaStyle">
-        1. Set chords and scales.<br><br>
-        2. Click "PLAY" button.<br><br>
-        3. Make melody line.<br><br>
-    </div>
-    <img src="image/MelodyMaker.gif" width="60%">
-</div>
-
-<div id="Space2" class="Space1"></div>
-
-<div id="SampleContentsArea" class="SampleContentsAreaStyle">          
-    <div id="SampleLabel" class="SampleLabelStyle">Jazz Standard</div>    
-    <div id="ContentsListArea" class="ContentsListAreaStyle"></div>    
-</div>
-
-<div id="FooterArea" class="FooterAreaStyle">Contact : ii0244is@gmail.com</div>
-
+    </div>        
+    <div id="Space1" class="Space1"></div>    
+    <div id="SampleArea" class="SampleAreaStyle"></div>            
+    <div id="FooterArea" class="FooterAreaStyle">Contact : ii0244is@gmail.com</div>
 </div>
 </body>
 
