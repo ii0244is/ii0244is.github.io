@@ -184,6 +184,50 @@ DateInputSlider.prototype.setupEvents = function()
         this.changeScale( event.wheelDelta );
         this.draw();
     }.bind(this);
+
+    this.canvas.ontouchstart = function (event)
+    {
+        event.preventDefault();
+        let x = event.offsetX || event.layerX;
+        let y = event.offsetY || event.layerY;
+        if( !x ){
+            x = event.touches[0].clientX;
+            y = event.touches[0].clientY;
+        }
+        this.mousePosX = x;
+        this.mousePosY = y;
+        this.touchmove = true;
+    }.bind(this);
+
+    this.canvas.ontouchmove = function (event)
+    {
+        event.preventDefault();
+        if (this.touchmove)
+        {
+            let x = event.offsetX || event.layerX;
+            let y = event.offsetY || event.layerY;
+            if( !x ){
+                x = event.touches[0].clientX;
+                y = event.touches[0].clientY;
+            }
+
+            let diffX = this.mousePosX - x;
+            this.changeDate( diffX );
+            this.draw();
+            if( this.onchange ){
+                this.onchange( this.getValue() );
+            }
+            
+            this.mousePosX = x;
+            this.mousePosY = y;            
+        }
+    }.bind(this);
+
+    this.canvas.ontouchend = function (event)
+    {
+        event.preventDefault();
+        this.touchmove = false;
+    }.bind(this);       
 }
 
 DateInputSlider.prototype.changeDate = function( diff ) 

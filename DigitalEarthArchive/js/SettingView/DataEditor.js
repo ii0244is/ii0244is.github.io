@@ -45,26 +45,14 @@ let DataEditor = function()
     this.note.style.border = "none";
     this.note.rows = 10;    
 
-    this.position = new ParametersInput();
+    this.position = new PositionInput();
     this.position.getDom().style.width = "calc( 100% - 130px )";
-    this.position.addParamInput( "longitude", "number" );
-    this.position.setValueRange( "longitude", -180, 180, -6 );
-    this.position.addParamInput( "latitude", "number" );
-    this.position.setValueRange( "latitude", -180, 180, -6 );
 
-    this.arcStartPosition = new ParametersInput();
+    this.arcStartPosition = new PositionInput();
     this.arcStartPosition.getDom().style.width = "calc( 100% - 130px )";
-    this.arcStartPosition.addParamInput( "longitude", "number" );
-    this.arcStartPosition.setValueRange( "longitude", -180, 180, -6 );
-    this.arcStartPosition.addParamInput( "latitude", "number" );
-    this.arcStartPosition.setValueRange( "latitude", -180, 180, -6 );
 
-    this.arcStopPosition = new ParametersInput();
+    this.arcStopPosition = new PositionInput();
     this.arcStopPosition.getDom().style.width = "calc( 100% - 130px )";
-    this.arcStopPosition.addParamInput( "longitude", "number" );
-    this.arcStopPosition.setValueRange( "longitude", -180, 180, -6 );
-    this.arcStopPosition.addParamInput( "latitude", "number" );
-    this.arcStopPosition.setValueRange( "latitude", -180, 180, -6 );    
 
     this.barParam = new ParametersInput();
     this.barParam.getDom().style.width = "calc( 100% - 130px )";

@@ -1,87 +1,141 @@
-let CameraSetting = function()
+
+let PositionInput = function()
 {
+    this.params = {};
+    this.onchange = null;
+
     this.dom = document.createElement("div");
-    this.dom.style.display = "flex"; 
-    this.dom.style.flexDirection = "column"; 
-    this.dom.style.overflowY = "scroll";
-    this.dom.style.padding = "0px 10px 0px 0px"; 
+    this.dom.style.display = "flex";
+    this.dom.style.flexDirection = "column";
+    this.dom.style.backgroundColor = "#fff";
+    this.dom.style.color = "#111";
+    this.dom.style.width = "calc( 100% - 30px )";    
+    this.dom.style.padding = "10px 15px 10px 15px";
+    this.dom.style.margin  = "10px 0px 10px 0px"; 
+    this.dom.style.borderRadius = "10px"    
+    this.keyInputArea = document.createElement("div");
+    this.keyInputArea.style.display = "flex";
+    this.keyInputArea.style.flexDirection = "column";   
+    this.lonInputArea = document.createElement("div");
+    this.lonInputArea.style.display = "flex";
+    this.lonInputArea.style.flexDirection = "row";
+    this.lonInputArea.style.alignItmes = "center";
+    this.lonInputArea.style.justifyContent = "space-between";
+    this.lonInputArea.style.margin = "0px 0px 8px 0px";    
+    this.lonInputLabel = document.createElement("div");
+    this.lonInputLabel.textContent = "Longitude";
+    this.lonInput = document.createElement("input");
+    this.lonInput.type = "number";
+    this.lonInput.min = -180;
+    this.lonInput.max = 180;
+    this.lonInput.step = 0.01;  
+    this.lonInput.style.width = "120px";
+    this.lonInput.style.padding = "5px 10px 5px 10px";
+    this.lonInput.style.borderRadius = "5px";
+    this.lonInputArea.appendChild( this.lonInputLabel );
+    this.lonInputArea.appendChild( this.lonInput );
+    this.latInputArea = document.createElement("div");
+    this.latInputArea.style.display = "flex";
+    this.latInputArea.style.flexDirection = "row";
+    this.latInputArea.style.alignItmes = "center";
+    this.latInputArea.style.justifyContent = "space-between";
+    this.latInputArea.style.margin = "0px 0px 8px 0px";        
+    this.latInputLabel = document.createElement("div");
+    this.latInputLabel.textContent = "Latitude";
+    this.latInput = document.createElement("input");
+    this.latInput.type = "number";
+    this.latInput.min = -90;
+    this.latInput.max = 90;  
+    this.latInput.step = 0.01;  
+    this.latInput.style.width = "120px";  
+    this.latInput.style.padding = "5px 10px 5px 10px";
+    this.latInput.style.borderRadius = "5px";    
+    this.latInputArea.appendChild( this.latInputLabel );
+    this.latInputArea.appendChild( this.latInput );
+    this.keyInputArea.appendChild( this.lonInputArea );
+    this.keyInputArea.appendChild( this.latInputArea );
+    this.mouseInputArea = document.createElement("div");
+    this.mouseInputArea.style.margin = "5px 0px 0px 0px";
+    this.mouseInput = new MouseInputController()
+    this.mouseInputArea.appendChild( this.mouseInput.getDom() );
+    this.dom.appendChild( this.keyInputArea );
+    this.dom.appendChild( this.mouseInputArea );
 
-    this.angleLabel = document.createElement("div");
-    this.angleLabel.textContent = "Angle";
-    this.angleLabel.style.margin = "6px 0px 6px 0px";
-    this.angleController = new CameraSettingController();
-    this.angleController.setControlMode( "2D" );
-    this.space = document.createElement("div");
-    this.space.style.width = "10px";
-    this.space.style.height = "20px";
-    this.zoomLabel = document.createElement("div");
-    this.zoomLabel.textContent = "Zoom";
-    this.zoomLabel.style.margin = "6px 0px 6px 0px";    
-    this.zoomController = new CameraSettingController();
-    this.zoomController.setControlMode( "1D" );
-
-    this.dom.appendChild( this.angleLabel );
-    this.dom.appendChild( this.angleController.getDom() );
-    this.dom.appendChild( this.space );
-    this.dom.appendChild( this.zoomLabel );
-    this.dom.appendChild( this.zoomController.getDom() );
-    
-    this.angleController.onchange = function( diffX, diffY ){
-        g_webGLView.cameraPosH += diffX;
-        let valV = g_webGLView.cameraPosV;
-        valV += diffY;
-        if ((1.0 < valV) && (valV < 89.0)){
-            g_webGLView.cameraPosV = valV;
+    this.lonInput.onchange = function(){
+        if( this.onchange ){
+            this.onchange( this.getValue() );
         }
-    }.bind(this)
+    }.bind(this);
 
-    this.zoomController.onchange = function( diffX ){
-        let val = g_webGLView.cameraPosR;
-        val -= diffX / 10 * g_webGLView.zoomStep;
-        if (0.01 < val && val < 400){
-            g_webGLView.cameraPosR = val;
-            g_webGLView.moveStep = g_webGLView.cameraPosR / 700;
+    this.latInput.onchange = function(){
+        if( this.onchange ){
+            this.onchange( this.getValue() );
         }
-        g_webGLView.zoomStep = g_webGLView.cameraPosR * 0.01;
-    }.bind(this)
+    }.bind(this);
+
+    this.mouseInput.onchange = function( diffX, diffY ){
+        if( this.onchange ){
+            let val      = this.getValue();
+            let radH     = g_webGLView.cameraPosH * 3.141592 / 180;
+            let moveStep = g_webGLView.moveStep * 2.0;
+            let moveLon  = -diffY * Math.cos(radH) * moveStep;
+            let moveLat  = -diffY * Math.sin(radH) * moveStep;
+            moveLon += -diffX * Math.sin(radH) * moveStep;
+            moveLat += diffX * Math.cos(radH) * moveStep;
+            let lon = Number( val.longitude ) + moveLon;
+            let lat = Number( val.latitude ) - moveLat;
+            lon = Math.min( lon,  180 );
+            lon = Math.max( lon, -180 );
+            lat = Math.min( lat,  90  );
+            lat = Math.max( lat, -90  );
+            this.setValue( "longitude", lon );
+            this.setValue( "latitude",  lat );            
+            this.onchange( this.getValue() );
+        }
+    }.bind(this);
 }
 
-CameraSetting.prototype.getDom = function()
+PositionInput.prototype.resize = function()
+{
+    this.mouseInput.resize();
+}
+
+PositionInput.prototype.getDom = function()
 {
     return this.dom;
 }
 
-CameraSetting.prototype.resize = function()
+PositionInput.prototype.setValue = function( type, val )
 {
-    this.angleController.resize();
-    this.zoomController.resize();
-}
-
-CameraSetting.prototype.show = function( isShow )
-{
-    if( isShow ){
-        this.dom.style.display = "flex";
-        this.resize();
-    }else{
-        this.dom.style.display = "none";
+    if( type == "longitude" ){
+        this.lonInput.value = val.toFixed(7);
+    }else if( type == "latitude" ){
+        this.latInput.value = val.toFixed(7);
     }
 }
 
+PositionInput.prototype.getValue = function()
+{
+    let values = {}
+    values.longitude = this.lonInput.value;
+    values.latitude  = this.latInput.value;
+    return values;
+}
+
 
 //////////////////////////////////////////////////////
-// CameraSettingController
+// MouseInputController
 //////////////////////////////////////////////////////
 
-let CameraSettingController = function()
+let MouseInputController = function()
 {
     this.canvas = document.createElement("canvas");
     this.canvas.style.width = "100%"
-    this.canvas.style.height = "80px"
+    this.canvas.style.height = "160px"
     this.canvas.style.borderRadius = "10px"
     this.canvas.style.border = "1px solid #666";
     this.canvas.style.borderStyle = "solid";    
     this.canvas.style.cursor = "pointer";
-    this.mode = "1D";
 
     this.canvas.onmousedown = function (event)
     {
@@ -128,7 +182,7 @@ let CameraSettingController = function()
         this.mouseLeftDrag   = false;
         this.mouseMiddleDrag = false;
         this.mouseRightDrag  = false;
-    }.bind(this);      
+    }.bind(this);   
     
     this.canvas.ontouchstart = function (event)
     {
@@ -165,8 +219,8 @@ let CameraSettingController = function()
             this.mousePosX = x;
             this.mousePosY = y;            
         }
-    }.bind(this);    
-
+    }.bind(this);   
+    
     this.canvas.ontouchend = function (event)
     {
         event.preventDefault();
@@ -174,12 +228,12 @@ let CameraSettingController = function()
     }.bind(this);    
 }
 
-CameraSettingController.prototype.getDom = function()
+MouseInputController.prototype.getDom = function()
 {
     return this.canvas;
 }
 
-CameraSettingController.prototype.resize = function()
+MouseInputController.prototype.resize = function()
 {
     let width = this.canvas.clientWidth;
     let height = this.canvas.clientHeight;
@@ -188,18 +242,7 @@ CameraSettingController.prototype.resize = function()
     this.draw();
 }
 
-CameraSettingController.prototype.setControlMode = function( mode )
-{
-    this.mode = mode;
-    if( this.mode == "1D" ){
-        this.canvas.style.height = "80px"
-    }else if( this.mode == "2D" ){
-        this.canvas.style.height = "160px"
-    }
-    this.resize();
-}
-
-CameraSettingController.prototype.draw = function()
+MouseInputController.prototype.draw = function()
 {
     let ctx = this.canvas.getContext("2d");
     let width = this.canvas.width;
@@ -261,7 +304,6 @@ CameraSettingController.prototype.draw = function()
         drawLine( startPosX, startPosY, stopPosX, stopPosY );           
     }
 
-    if( this.mode == "2D" )
     {
         let startPosX = width / 2;
         let startPosY = height * 0.15;
