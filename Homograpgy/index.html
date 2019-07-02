@@ -1,0 +1,80 @@
+<html lang="en">
+
+<head>
+<meta charset="utf-8"/>
+<title>Homograpgy Transform</title>
+<script type="text/javascript" src="main.js"></script>
+</head>
+
+<style>
+body {
+    margin: 0px;
+    background-color: #eee;
+}
+
+.mainStyle 
+{
+    font-family: "palatino linotype", palatino, serif;
+    background-color: #fff;
+    width: 70%;
+    min-width: 850px;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+}
+
+.TitleStyle 
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #111;
+    color:#dedede;    
+    width: calc( 100% - 40px );
+    padding: 10px 20px 10px 20px;
+}
+
+.PictureInputStyle
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 30px 0px 30px 0px;
+    margin: 0px 20px 0px 20px;
+    border: 1px solid #555;
+    border-style: none none solid none;      
+}
+
+.OutputStyle
+{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 30px 0px 30px 0px;
+    margin: 0px 20px 0px 20px;
+}
+
+.FooterStyle 
+{
+    background-color: #111;
+    color:#dedede;
+    width: calc( 100% - 10px );
+    padding: 10px 0px 0px 10px;
+    height: 70px;
+}
+
+</style>
+
+<body onload="appStart()">
+    <div id="mainArea" class="mainStyle">
+        <div id="TitleArea" class="TitleStyle"></div>
+        <div id="PictureInputArea" class="PictureInputStyle"></div>    
+        <div id="OutputArea" class="OutputStyle"></div>    
+        <div id="FooterArea" class="FooterStyle">Contact : ii0244is@gmail.com</div>    
+    </div>
+</body>
+
+</html>

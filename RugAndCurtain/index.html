@@ -1,0 +1,180 @@
+<html>
+
+<head>
+
+<meta charset="utf-8"/>        
+
+<link rel="stylesheet" type="text/css" href="main.css">
+
+<script type="text/javascript" src="js/main.js"></script>
+<script type="text/javascript" src="js/WebGLCanvas.js"></script>
+<script type="text/javascript" src="js/TextureSetting.js"></script>
+<script type="text/javascript" src="js/glObjectPlane.js"></script>
+<script type="text/javascript" src="js/glMatrix.js"></script>
+<script type="text/javascript" src="js/glUtilityFunc.js"></script>
+
+</head>       
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    ObjectID Shader 
+//////////////////////////////////////////////////////////  -->
+
+<script id='vertexShaderObjectMap' type="x-shader/x-vertex">
+attribute vec3 aVertexPosition;
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+
+void main()
+{
+    gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( aVertexPosition, 1.0 );
+}
+</script>
+    
+<script id='fragmentShaderObjectMap' type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 uObjectID;
+
+void main()
+{
+    gl_FragColor = uObjectID;
+}
+</script> 
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    Simple Texture Mapping
+//////////////////////////////////////////////////////////  -->
+
+<script id = 'vertexShaderImage' type = "x-shader/x-vertex" >
+attribute vec3 aVertexPosition;
+attribute vec2 aVertexUV;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+
+varying vec2 vTextureCoord;
+
+void main() 
+{
+	vTextureCoord = aVertexUV;
+	gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( aVertexPosition, 1.0 );
+}                                                   
+</script> 
+
+<script id = 'fragmentShaderImage' type = "x-shader/x-fragment" >
+precision mediump float;
+uniform sampler2D uTexture;
+uniform vec4 uParam;
+
+varying vec2 vTextureCoord;
+
+void main() 
+{
+    vec2 uv;
+    if( uParam.z < 0.5 ){
+        uv = vTextureCoord;
+    }else if( uParam.z < 1.5 ){
+        uv.x = ( 1.0 - vTextureCoord.y );
+        uv.y = vTextureCoord.x;
+    }else if( uParam.z < 2.5 ){
+        uv.x = ( 1.0 - vTextureCoord.x );
+        uv.y = ( 1.0 - vTextureCoord.y );
+    }else if( uParam.z < 3.5 ){
+        uv.x = vTextureCoord.y;
+        uv.y = ( 1.0 - vTextureCoord.x );        
+    }
+    vec4 texelColor = texture2D( uTexture, uv );
+    
+    float isBlinking = uParam.y;
+    float time = uParam.x;
+    if( isBlinking > 0.5 )
+    {
+        gl_FragColor = vec4( texelColor.xyz * ( 0.9 + 0.2 * sin( time ) ), texelColor.w );
+    }
+    else
+    {
+        gl_FragColor = texelColor;
+    }
+}                                             
+</script> 
+
+<!-- ////////////////////////////////////////////////////////// 
+    Texture Mapping ( Lighting )
+//////////////////////////////////////////////////////////  -->
+
+<script id = 'vertexShaderImageLight' type = "x-shader/x-vertex" >
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec2 aVertexUV;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+uniform mat4 uNormalMatrix;
+
+varying vec2 vTextureCoord;
+varying vec3 vNormal;
+varying vec3 vPosition;
+
+void main() 
+{
+    vTextureCoord = aVertexUV;
+    vNormal       = ( uNormalMatrix * vec4( aVertexNormal, 1.0 ) ).xyz;
+    vPosition     = ( uMWMatrix * vec4( aVertexPosition, 1.0 ) ).xyz;    
+	gl_Position   = uPMatrix * uMVMatrix * uMWMatrix * vec4( aVertexPosition, 1.0 );
+}                                                   
+</script> 
+
+<script id = 'fragmentShaderImageLight' type = "x-shader/x-fragment" >
+precision mediump float;
+
+varying vec2 vTextureCoord;
+varying vec3 vNormal;
+varying vec3 vPosition;
+
+uniform vec3 uLightPos;
+uniform sampler2D uTexture;
+uniform vec4 uParam;
+
+void main() 
+{
+    vec3 LightDirection = normalize( uLightPos - vPosition );
+    vec3 Normal = normalize( vNormal );
+    float distance = length( uLightPos - vPosition );
+    float atte = 1.0 / ( 1.0 + 0.001 * distance + + 0.00001 * distance * distance );
+    float diffuse = clamp( dot( Normal, LightDirection ), 0.1 , 1.0 );
+    if( diffuse < 0.3 ) diffuse = 0.3;    
+    if( atte < 0.7 ) atte = 0.7;
+
+    vec4 texelColor = texture2D( uTexture, vTextureCoord );
+    vec3 color = texelColor.xyz * diffuse * atte + 0.1;
+    
+    float isBlinking = uParam.y;
+    float time = uParam.x;
+    if( isBlinking > 0.5 )
+    {
+        gl_FragColor = vec4( color.xyz * ( 1.0 + 0.4 * sin( time ) ), color.w );
+    }
+    else
+    {
+        gl_FragColor = color;
+    }
+}                                             
+</script> 
+
+
+<!-- ////////////////////////////////////////////////////////// 
+    HTML
+//////////////////////////////////////////////////////////  -->
+
+<body onload="appStart()">
+<div id="MainArea">
+    <div id="WebGLCanvas"></div>
+    <div id="TextureSetting"></div>
+</div>
+</body>
+
+</html>
