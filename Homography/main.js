@@ -17,54 +17,56 @@ function appStart()
         h21 : 0, h22 : 0, h23 : 0, 
         h31 : 0, h32 : 0, h33 : 1, 
     }
+    let hasHomographyTransformDone = false;
 
     let TitleArea = document.getElementById("TitleArea");
-    let PictureInputArea = document.getElementById("PictureInputArea");
-    let OutputArea = document.getElementById("OutputArea");
-
     let titleText = document.createElement("div");
-    titleText.textContent = "Homograpgy Transform";
-    titleText.style.fontSize = "36px";
+    titleText.textContent = "Homography Transform";
+    titleText.style.fontSize = "36px";    
     TitleArea.appendChild( titleText );
 
-    let inputPictureSetting = document.createElement("div");
-    inputPictureSetting.style.display = "flex";
-    inputPictureSetting.style.flexDirection = "column";    
+    let InputArea = document.getElementById("InputArea");
     let fileInput = document.createElement("input");
     fileInput.type = "file";
-    let transformButton = document.createElement("button");
-    transformButton.textContent = "Transform";
-    transformButton.style.margin = "10px 0px 10px 0px";
-    inputPictureSetting.appendChild( fileInput );
-    inputPictureSetting.appendChild( transformButton );
+    fileInput.textContent = "Export"
+    fileInput.style.padding = "10px 20px 10px 20px";
+    fileInput.style.borderRadius = "5px";
+    fileInput.style.backgroundColor = "#333";
+    fileInput.style.color = "#eee";    
+    InputArea.appendChild( fileInput );
+
+    let PictureArea = document.getElementById("PictureArea");
     let pictureCanvas = document.createElement("canvas");
     pictureCanvas.style.width = canvasSize + "px";
     pictureCanvas.style.height = canvasSize + "px";
-    pictureCanvas.style.border = "1px solid #555";
+    pictureCanvas.style.border = "1px solid #aaa";
     pictureCanvas.style.borderStyle = "solid";    
     pictureCanvas.width = canvasSize;
     pictureCanvas.height = canvasSize;
-    PictureInputArea.appendChild( inputPictureSetting );
-    PictureInputArea.appendChild( pictureCanvas );
-
-    let homograpgyOutputSetting = document.createElement("div");
-    homograpgyOutputSetting.style.display = "flex";
-    homograpgyOutputSetting.style.flexDirection = "column";
-    let fileNameInput = document.createElement("input");
-    let downloadButton = document.createElement("a");
-    downloadButton.href = "#";
-    downloadButton.textContent = "Download";
+    let arrowImage = document.createElement("div");
+    arrowImage.style.color = "#999";
+    arrowImage.style.fontSize = "80px";
+    arrowImage.textContent = "➡"
     let homograpgyCanvas = document.createElement("canvas");
     homograpgyCanvas.style.width = canvasSize + "px";
     homograpgyCanvas.style.height = canvasSize + "px";
-    homograpgyCanvas.style.border = "1px solid #555";
+    homograpgyCanvas.style.border = "1px solid #aaa";
     homograpgyCanvas.style.borderStyle = "solid";    
     homograpgyCanvas.width = canvasSize;
     homograpgyCanvas.height = canvasSize;
-    homograpgyOutputSetting.appendChild( fileNameInput );
-    homograpgyOutputSetting.appendChild( downloadButton );
-    OutputArea.appendChild( homograpgyCanvas );    
-    OutputArea.appendChild( homograpgyOutputSetting );    
+    PictureArea.appendChild( pictureCanvas );
+    PictureArea.appendChild( arrowImage );
+    PictureArea.appendChild( homograpgyCanvas );  
+
+    let OutputArea = document.getElementById("OutputArea");
+    let exportButton = document.createElement("button");
+    exportButton.textContent = "Export"
+    exportButton.style.padding = "10px 20px 10px 20px";
+    exportButton.style.borderRadius = "5px";
+    exportButton.style.backgroundColor = "#333";
+    exportButton.style.color = "#eee";
+    exportButton.style.fontSize = "24px"
+    OutputArea.appendChild( exportButton );
 
     fileInput.onchange = function(e){
         if ( !e.target.files[0] ) return;
@@ -77,11 +79,6 @@ function appStart()
 
     inputPicture.onload = function (){
         drawInputPictureCanvas();
-    }
-
-    transformButton.onclick = function(){
-        calcHomograpgy();
-        drawOutputImage();
     }
 
     pictureCanvas.onmousedown = function (e){
@@ -124,9 +121,17 @@ function appStart()
     }
 
     pictureCanvas.onmouseup = function (e){
+        let isMoving = false;
         for( let i in transformAreaPointer ){
-            transformAreaPointer[i].isMoving = false;
-        }        
+            if( transformAreaPointer[i].isMoving ){
+                transformAreaPointer[i].isMoving = false;
+                isMoving = true;
+            }
+        }      
+        if(isMoving){
+            calcHomograpgy();
+            drawOutputImage();
+        }  
     }    
 
     pictureCanvas.onmouseout = function (e){
@@ -135,8 +140,8 @@ function appStart()
         }        
     }        
 
-    downloadButton.onclick = function(){
-        if( fileNameInput.value == "" ){
+    exportButton.onclick = function(){
+        if( !hasHomographyTransformDone ){
             return;
         }
         saveCanvasImage();
@@ -238,11 +243,13 @@ function appStart()
         ctx.fillStyle = "rgb(190, 190, 190)";
         ctx.fillRect( 0, 0, canvasSize, canvasSize );   
         ctx.putImageData( dstData, 0, 0 );
+
+        hasHomographyTransformDone = true;
     }
 
     function saveCanvasImage(){
         let imageType = "image/png";
-        let fileName = fileNameInput.value + ".png";
+        let fileName = "out.png";
         let base64 = homograpgyCanvas.toDataURL(imageType);
         let blob = Base64toBlob(base64);
         saveBlob(blob, fileName);
@@ -267,8 +274,10 @@ function appStart()
             window.navigator.msSaveBlob(blob, fileName);
             window.navigator.msSaveOrOpenBlob(blob, fileName);
         }else{
-            downloadButton.download = fileName;
-            downloadButton.href = window.URL.createObjectURL(blob);
+            let download = document.createElement("a");
+            download.download = fileName;
+            download.href = window.URL.createObjectURL(blob);
+            download.click();
         }    
     }    
 }
