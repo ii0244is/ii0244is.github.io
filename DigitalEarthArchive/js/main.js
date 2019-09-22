@@ -1,6 +1,6 @@
 
 
-// Too many grobal variables... ( for easy and fast implementation )
+// Too many global variables... ( for easy and fast implementation )
 // This is not good.
 
 let g_webGLView;
@@ -14,6 +14,7 @@ let g_cameraWork;
 let g_timeTraveler;
 let g_pointIcon;
 let g_keywordFilter;
+let g_vertexEditor;
 
 let g_dataList = {};
 let g_isViewerMode = false;
@@ -116,6 +117,7 @@ function createFunctions()
     g_cameraWork = new CameraWorkManager();
     g_pointIcon = new PointIconManager();
     g_timeTraveler = new TimeTraveler();
+    g_vertexEditor = new VertexEditor();
 }
 
 function createMap()
@@ -165,6 +167,7 @@ function setUpEvent()
     {
         if( shiftKeyDown ) return false;
         if( g_newDataManager.mousedown( x, y, isTouch, buttonType ) ) return true;
+        if( g_vertexEditor.mousedown( x, y, name ) ) return true;
         selectObject( name );
     } );
 
@@ -172,10 +175,17 @@ function setUpEvent()
     {
         if( shiftKeyDown ) return false;
         if( g_newDataManager.mousemove( x, y, false, null ) ) return true;
+        if( g_vertexEditor.mousemove( x, y ) ) return true;
+    } );
+
+    g_webGLView.setMouseUpCallback( function ()
+    {
+        if( g_vertexEditor.mouseup() ) return true;
     } );
 
     g_webGLView.setMouseWheelCallback( function( x, y ){
         g_newDataManager.mousewheel();
+        g_vertexEditor.mousewheel();
     } );
 
     resizeEvent();

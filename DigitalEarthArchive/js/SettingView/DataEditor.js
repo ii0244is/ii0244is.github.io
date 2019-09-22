@@ -54,6 +54,14 @@ let DataEditor = function()
     this.arcStopPosition = new PositionInput();
     this.arcStopPosition.getDom().style.width = "calc( 100% - 130px )";
 
+    this.vertexEditButton = document.createElement("div");
+    this.vertexEditButton.textContent = "Edit";
+    this.vertexEditButton.classList.add( "textButton" );
+    this.vertexEditButton.style.padding = "5px 20px 5px 20px"
+    this.vertexEditButton.style.margin = "10px 0px 10px 0px" 
+    this.vertexEditButton.style.border = "1px solid #444";
+    this.vertexEditButton.style.borderStyle = "solid";  
+
     this.barParam = new ParametersInput();
     this.barParam.getDom().style.width = "calc( 100% - 130px )";
     this.barParam.addParamInput( "Width" , "number" );
@@ -108,6 +116,7 @@ let DataEditor = function()
     addParam( "Position", this.position.getDom() );
     addParam( "Start", this.arcStartPosition.getDom() );
     addParam( "Stop", this.arcStopPosition.getDom() );
+    addParam( "Vertex", this.vertexEditButton );
     addParam( "Bar", this.barParam.getDom() );
     addParam( "Arc", this.arcParam.getDom() );
     addParam( "Icon", this.pointIcon.getDom() );
@@ -133,9 +142,13 @@ let DataEditor = function()
         this.changeData( "arcStart", value )
     }.bind(this);
     
+    this.vertexEditButton.onclick = function() {
+        g_vertexEditor.start( this.currentDataName )
+    }.bind(this);
+
     this.arcStopPosition.onchange = function( value ) {
         this.changeData( "arcStop", value )
-    }.bind(this);
+    }.bind(this);    
     
     this.barParam.onchange = function( value ) {
         this.changeData( "barGraph", value )
@@ -205,6 +218,7 @@ DataEditor.prototype.setData = function( name, data )
     this.paramInputs["Position"].style.display = "none";
     this.paramInputs["Start"].style.display    = "none";
     this.paramInputs["Stop"].style.display     = "none";
+    this.paramInputs["Vertex"].style.display   = "none";
     this.paramInputs["Bar"].style.display      = "none";
     this.paramInputs["Arc"].style.display      = "none";
     this.paramInputs["Icon"].style.display     = "none";
@@ -226,9 +240,11 @@ DataEditor.prototype.setData = function( name, data )
         this.paramInputs["Icon"].style.display     = "flex";
         this.paramInputs["Point"].style.display    = "flex";
     }else if( data.type == "Line" ){
+        this.paramInputs["Vertex"].style.display   = "flex";
         this.paramInputs["Line"].style.display     = "flex";
         this.paramInputs["Color"].style.display    = "flex";
     }else if( data.type == "Polygon" ){
+        this.paramInputs["Vertex"].style.display   = "flex";
         this.paramInputs["Color"].style.display    = "flex";
     }
 

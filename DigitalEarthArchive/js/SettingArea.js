@@ -2,8 +2,8 @@
 let SettingArea = function()
 {
     this.dom = document.createElement("div");
-    this.dom.style.display = "flex";
     this.dom.style.height = "calc( 100% - 20px )";
+    this.dom.style.display = "flex";
     this.dom.style.flexDirection = "column";
     this.dom.style.padding = "10px 15px 10px 15px";
     this.dom.style.backgroundColor = "rgb( 10, 155, 148 )";
@@ -17,7 +17,7 @@ let SettingArea = function()
     this.settingSelectBar.style.border = "1px solid #fff";
     this.settingSelectBar.style.borderStyle = "none none solid none";  
     this.settingSelectBar.style.padding = "0px 0px 5px 0px";     
-    this.settingSelectBar.style.margin = "0px 0px 10px 0px";  
+    this.settingSelectBar.style.margin = "0px 0px 10px 0px";
     this.settingLabel = document.createElement("div");
     this.settingLabel.style.fontSize = "28px";
     this.settingButtonArea = document.createElement("div");
@@ -62,6 +62,7 @@ let SettingArea = function()
     this.config        = new Config();
     this.dataEditor    = new DataEditor();
     this.dataViewer    = new DataViewer();
+    this.vertexEdit    = new VertexEdit();
 
     this.dom.appendChild( this.settingSelectBar );
     this.dom.appendChild( this.fileManager.getDom() );
@@ -71,6 +72,7 @@ let SettingArea = function()
     this.dom.appendChild( this.config.getDom() );
     this.dom.appendChild( this.dataEditor.getDom() );
     this.dom.appendChild( this.dataViewer.getDom() );
+    this.dom.appendChild( this.vertexEdit.getDom() );
 
     this.currentViewName = "";
     this.changeSettingView( "File" );
@@ -100,7 +102,7 @@ SettingArea.prototype.setData = function( name, data )
     }else{
         this.dataEditor.setData( name, data );
         this.changeSettingView( "DataEditor" );
-        this.dataEditor.resize();   
+        this.dataEditor.resize();
     }
 }
 
@@ -136,6 +138,7 @@ SettingArea.prototype.changeSettingView = function( name )
     }
 
     this.currentViewName = name;
+    this.settingSelectBar.style.display = "flex";
     this.fileManager.show(false);
     this.dataList.show(false);   
     this.cameraSetting.show(false);   
@@ -143,6 +146,7 @@ SettingArea.prototype.changeSettingView = function( name )
     this.config.show(false);   
     this.dataEditor.show(false);   
     this.dataViewer.show(false);   
+    this.vertexEdit.show(false);
 
     for( let j in this.settingList ){
         if( name == this.settingList[j].name ){
@@ -163,12 +167,15 @@ SettingArea.prototype.changeSettingView = function( name )
         this.keywordFilter.show(true);
     }else if( this.currentViewName == "Config" ){
         this.config.show(true);        
-    }else if( this.currentViewName == "DataEditor"){
+    }else if( this.currentViewName == "DataEditor" ){
         this.dataEditor.show(true);
         this.settingLabel.textContent = "";
-    }else if( this.currentViewName == "DataViewer"){
+    }else if( this.currentViewName == "DataViewer" ){
         this.dataViewer.show(true);
         this.settingLabel.textContent = "";
+    }else if( this.currentViewName == "VertexEdit" ){
+        this.settingSelectBar.style.display = "none"
+        this.vertexEdit.show(true);
     }else{
         this.dataList.show(true);
     }
@@ -184,6 +191,11 @@ SettingArea.prototype.setTextColor = function( r, g, b )
 {
     let textColor = "rgb(" + r + "," + g + "," + b + ")";
     this.dom.style.color = textColor;
+}
+
+SettingArea.prototype.setVertexInfo = function( idx, lon, lat )
+{
+    this.vertexEdit.setVertexInfo( idx, lon, lat );
 }
 
 SettingArea.prototype.show = function( isShow )
