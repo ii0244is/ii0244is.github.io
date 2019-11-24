@@ -1,0 +1,189 @@
+
+<html lang="en">
+
+<head>
+<meta charset="utf-8"/>
+<script type="text/javascript" src="NumberInputSlider.js"></script>
+<script type="text/javascript" src="DateInputSlider.js"></script>
+<script type="text/javascript" src="TimeInputSlider.js"></script>
+<script type="text/javascript" src="ListView.js"></script>
+<script type="text/javascript" src="SelectorView.js"></script>
+
+</head>
+        
+<!-------------------------------
+    CSS
+-------------------------------->
+
+<style>
+
+body{
+    width: 100%;
+    margin: 0px;
+    background-color: rgb(82, 82, 82);
+    color: white;
+    font-family: Arial Black, Helvetica, sans-serif;
+}
+
+.Main {
+    width: 80%;
+    margin: 0px auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.Gui {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;   
+    margin: 10px 0px 10px 0px; 
+}
+
+.Label {
+    width: 150px;
+}
+
+</style>
+
+<!-------------------------------
+    JS
+-------------------------------->
+
+<script type="text/javascript">
+
+function AppStart()
+{
+    let numberInputArea = document.getElementById("Number");
+    let numberInputLabel = document.createElement("div");
+    numberInputLabel.textContent = "Number";
+    numberInputLabel.classList.add( "Label" );
+    let numberInputSlider = new NumberInputSlider();
+    numberInputSlider.getDom().style.width = "calc( 100% - 100px )";
+    numberInputSlider.setValueRange( -1000, 1000, -2 );
+    numberInputSlider.onchange = () => {
+        console.log( "Number", numberInputSlider.getValue() );
+    }    
+    numberInputArea.appendChild( numberInputLabel );
+    numberInputArea.appendChild( numberInputSlider.getDom() );
+
+    let dateInputArea = document.getElementById("Date");
+    let dateInputLabel = document.createElement("div");
+    dateInputLabel.textContent = "Date";
+    dateInputLabel.classList.add( "Label" );
+    let dateInputSlider = new DateInputSlider();
+    dateInputSlider.getDom().style.width = "calc( 100% - 100px )";
+    dateInputSlider.onchange = () => {
+        // console.log( "Date", dateInputSlider.getValue() );
+    }       
+    dateInputArea.appendChild( dateInputLabel );
+    dateInputArea.appendChild( dateInputSlider.getDom() );
+
+    let timeInputArea = document.getElementById("Time");
+    let timeInputLabel = document.createElement("div");
+    timeInputLabel.textContent = "Time";
+    timeInputLabel.classList.add( "Label" );
+    let timeInputSlider = new TimeInputSlider();    
+    timeInputSlider.getDom().style.width = "calc( 100% - 100px )";
+    timeInputSlider.onchange = () => {
+        console.log( "Time", timeInputSlider.getTime() );
+    }  
+    timeInputArea.appendChild( timeInputLabel );
+    timeInputArea.appendChild( timeInputSlider.getDom() );
+
+    let listViewArea = document.getElementById("List");
+    let listViewLabel = document.createElement("div");
+    listViewLabel.textContent = "List";
+    listViewLabel.classList.add( "Label" );
+    let listView = new ListView();
+    listView.getDom().style.width = "calc( 100% - 100px )";
+    listView.getDom().style.height = "300px";
+    listView.setItems( [ 
+        "AAA", "BBB", "CCC", "DDD",
+        "EEE", "FFF", "GGG", "HHH",
+        "III", "JJJ", "KKK", "LLL",
+        "MMM", "NNN", "OOO", "PPP"        
+    ] );
+    listView.onSelect = ( item ) => {
+        console.log( "List", item );
+    }
+    listView.onChangeOrder = () => {
+        console.log( "List", listView.getItems() );
+    }
+    listViewArea.appendChild( listViewLabel );
+    listViewArea.appendChild( listView.getDom() );
+
+    let selectorViewArea = document.getElementById("Selector");  
+    let selectorViewLabel = document.createElement("div");
+    selectorViewLabel.textContent = "Selector";
+    selectorViewLabel.classList.add( "Label" );
+    let selectorView = new SelectorView();
+    selectorView.getDom().style.width = "calc( 100% - 100px )";
+    selectorView.getDom().style.height = "320px";
+    let itemKeys = [ 
+        "AAA", "BBB", "CCC", "DDD",
+        "EEE", "FFF", "GGG", "HHH",
+        "III", "JJJ", "KKK", "LLL",
+        "MMM", "NNN", "OOO", "PPP",       
+        "QQQ", "RRR", "SSS", "TTT",
+        "UUU", "VVV", "WWW", "XXX",        
+    ]
+    let items = [];
+    for( let i in itemKeys ){
+        let item = {};
+        item.key = itemKeys[i];
+        item.img = document.createElement("canvas");
+        item.img.width = 100;
+        item.img.height = 100;
+        let r = Math.random() * 150;
+        let g = Math.random() * 150; 
+        let b = Math.random() * 150;
+        let color = "rgb(" + r + "," + g + "," + b + ")";        
+        let ctx = item.img.getContext("2d");
+        ctx.fillStyle = color; 
+        ctx.fillRect( 0, 0, item.img.width, item.img.height );
+        ctx.fillStyle = "rgb( 255, 255, 255 )";
+        ctx.textBaseline = "middle";
+        ctx.font = "22px Arial Black";
+        ctx.fillText( item.key, 10, 50 );
+        items.push( item );
+    }
+    selectorView.setUnselectedItems( items );
+    selectorView.onchange = () => {
+        console.log( "Selector View", selectorView.getSelectedItems() );
+    }
+    selectorViewArea.appendChild( selectorViewLabel );
+    selectorViewArea.appendChild( selectorView.getDom() );
+
+    function resize()
+    {
+        numberInputSlider.resize();
+        dateInputSlider.resize();
+        timeInputSlider.resize();
+        listView.resize();
+        selectorView.resize();
+    }    
+
+    window.onresize = resize;
+    resize();
+}
+
+</script>
+
+<!-------------------------------
+    HTML 
+-------------------------------->
+
+<body onload="AppStart()">
+    <div class="Main">
+        <h1>JavaScript Gui</h1>
+        <div class="Gui" id="Number"></div>
+        <div class="Gui" id="Date"></div>
+        <div class="Gui" id="Time"></div>
+        <div class="Gui" id="List"></div>
+        <div class="Gui" id="Selector"></div>    
+    </div>
+</body>
+
+</html>
