@@ -37,5 +37,6 @@ DataViewer.prototype.show = function( isShow )
 DataViewer.prototype.setData = function( name, data )
 {
     this.nameArea.textContent = data.name;
-    this.noteArea.innerHTML = data.note;
+    let text = data.note.replace(/\r?\n/g, '<br>');
+    this.noteArea.innerHTML = text;
 }

@@ -3,7 +3,7 @@ let InformationBar = function ()
 {
     this.dom = document.createElement("div");
     this.dom.style.position = "absolute";
-    this.dom.style.width = "200px";
+    this.dom.style.width = "240px";
     this.dom.style.borderRadius = "10px"
     this.dom.style.backgroundColor = "#eee";
     this.dom.style.display = "flex";

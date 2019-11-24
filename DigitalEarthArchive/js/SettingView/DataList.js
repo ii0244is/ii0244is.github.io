@@ -46,7 +46,11 @@ DataList.prototype.addData = function( objName )
     row.appendChild(label);
 
     let editButton = document.createElement("div");
-    editButton.textContent = "Edit";
+    if( g_isViewerMode ){
+        editButton.textContent = "Go";
+    }else{
+        editButton.textContent = "Edit";
+    }
     editButton.classList.add( "textButton" );
     editButton.style.padding = "3px 15px 3px 15px"
     editButton.style.margin = "0px 0px 3px 0px" 

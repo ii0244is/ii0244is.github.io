@@ -28,12 +28,15 @@ let TermInput = function()
     fromLabelArea.style.alignItems = "center";
     fromLabelArea.appendChild( fromLabel );
     fromLabelArea.appendChild( this.fromCheckbox.getDom() );
-    this.fromDateInput = new DateInputSlider(); 
+    this.fromDateInput = new DateInput(); 
+    this.fromDateInput.getDom().style.padding = "5px 0px 0px 0px";
+    this.fromDateInput.getDom().style.border = "solid 1px #888";
+    this.fromDateInput.getDom().style.borderStyle = "solid none none none";    
     this.fromDateInput.onchange = this.changeValue.bind(this);    
 
     let space = document.createElement("div");
     space.style.width = "100%";
-    space.style.height = "10px";
+    space.style.height = "15px";
 
     let toLabel = document.createElement("div");
     toLabel.style.width = "50px";
@@ -47,7 +50,10 @@ let TermInput = function()
     toLabelArea.style.alignItems = "center";
     toLabelArea.appendChild( toLabel );
     toLabelArea.appendChild( this.toCheckbox.getDom() );
-    this.toDateInput = new DateInputSlider();
+    this.toDateInput = new DateInput();
+    this.toDateInput.getDom().style.padding = "5px 0px 0px 0px";
+    this.toDateInput.getDom().style.border = "solid 1px #888";
+    this.toDateInput.getDom().style.borderStyle = "solid none none none";
     this.toDateInput.onchange = this.changeValue.bind(this);
 
     this.dom.appendChild(fromLabelArea);

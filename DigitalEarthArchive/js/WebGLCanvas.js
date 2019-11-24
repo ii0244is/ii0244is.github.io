@@ -142,8 +142,11 @@ WebGLCanvas = function ()
             this.cameraPosH += diffX;
             let valV = this.cameraPosV;
             valV += diffY;
-            if ((1.0 < valV) && (valV < 89.0))
-            {
+            if( valV < 0.1 ){
+                this.cameraPosV = 0.1;
+            }else if( 89.9 < valV ){
+                this.cameraPosV = 89.9;
+            }else{
                 this.cameraPosV = valV;
             }
 
