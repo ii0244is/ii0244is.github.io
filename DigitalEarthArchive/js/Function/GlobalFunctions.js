@@ -74,6 +74,15 @@ function addObject( objName, data )
     }  
 }
 
+function copyObject( name )
+{
+    let obj = g_dataList[name];
+    let newObj = JSON.parse( JSON.stringify( obj ) );
+    newObj.name += "_copy";
+    let newObjName = g_newDataManager.assignObjName( newObj.type );
+    addObject( newObjName, newObj );
+}
+
 function changeObjectParam( name )
 {
     data = g_dataList[name];

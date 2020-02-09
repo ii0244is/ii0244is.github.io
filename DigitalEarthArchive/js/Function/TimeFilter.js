@@ -12,8 +12,8 @@ let TimeFilter = function()
 
 TimeFilter.prototype.setSize = function( width, height )
 {
-    this.dom.style.width = width + "px";
-    this.dom.style.height = height + "px";
+    this.dom.style.width = width;
+    this.dom.style.height = height;
     this.resize();
 }
 

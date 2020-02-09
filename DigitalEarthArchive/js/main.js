@@ -20,6 +20,7 @@ let g_dataList = {};
 let g_isViewerMode = false;
 let g_time = 0;
 let g_selectedObjectName = null;
+let g_drawObjects = true;
 
 let WorldLandFileName = "mapData/ne_50m_land.json";
 let WorldCountriesFileName = "mapData/ne_50m_admin_0_countries.json";
@@ -45,7 +46,7 @@ function createGui()
     g_settingArea = new SettingArea();
     g_timeFilter = new TimeFilter();
     g_informationBar = new InformationBar();
-    g_timeFilter.setSize( 300, 80 );
+    g_timeFilter.setSize( "calc( 100% - 590px )", "80px" );
     g_timeFilter.setPosition( 90, 20 );
     g_informationBar.setPosition( 500, 20 );
 
@@ -56,6 +57,7 @@ function createGui()
     if( g_isViewerMode ){
         webGLCanvas.style.width = "calc( 100% - 480px )";
         newDataArea.style.display = "none";
+        g_timeFilter.setSize( "calc( 100% - 520px )", "80px" );
         g_timeFilter.setPosition( 20, 20 );
     }
     webGLCanvas.appendChild( g_webGLView.getDom() );
@@ -161,6 +163,9 @@ function setUpEvent()
 
     document.addEventListener("keyup", function(e){
         shiftKeyDown = e.shiftKey;
+        // if( e.key === "v" ){
+        //     g_drawObjects = !g_drawObjects;
+        // }
     }.bind(this)); 
 
     g_webGLView.setMouseDownCallback( function( x, y, name, isTouch, buttonType )
@@ -195,6 +200,11 @@ function mainLoop()
 {
     for( var data in g_dataList )
     {
+        // if( !g_drawObjects ){
+        //     g_webGLView.getGLObject( data ).setVisible( false );
+        //     continue;
+        // }
+
         let currentTime  = g_timeFilter.getCurrentDate();
         let dataStart    = g_dataList[data].startTime;
         let dataEnd      = g_dataList[data].endTime;

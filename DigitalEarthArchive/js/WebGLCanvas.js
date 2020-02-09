@@ -27,7 +27,7 @@ WebGLCanvas = function ()
     this.moveStep   = this.cameraPosR / 700;
 
     this.fovy = 60;
-    this.near = 0.01;
+    this.near = 0.1;
     this.far  = 500;
 
     this.WorldMatrix = mat4.create();

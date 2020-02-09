@@ -110,6 +110,14 @@ let DataEditor = function()
     this.deleteButton.style.border = "1px solid #444";
     this.deleteButton.style.borderStyle = "solid";  
 
+    this.copyButton = document.createElement("div");
+    this.copyButton.textContent = "Copy"
+    this.copyButton.classList.add( "textButton" );
+    this.copyButton.style.padding = "5px 20px 5px 20px"
+    this.copyButton.style.margin = "10px 0px 10px 0px" 
+    this.copyButton.style.border = "1px solid #444";
+    this.copyButton.style.borderStyle = "solid";  
+
     addParam( "Type", this.type );
     addParam( "Name", this.name );
     addParam( "Note", this.note );
@@ -125,6 +133,7 @@ let DataEditor = function()
     addParam( "Color", this.color.getDom() );
     addParam( "Term", this.term.getDom() );    
     addParam( "Delete", this.deleteButton );    
+    addParam( "Copy", this.copyButton ); 
 
     this.name.onchange = function() {
         this.changeData( "name", this.name.value )
@@ -181,6 +190,10 @@ let DataEditor = function()
     this.deleteButton.onclick = function(){
         deleteObject( this.currentDataName );
     }.bind(this);
+
+    this.copyButton.onclick = function(){
+        copyObject( this.currentDataName );
+    }.bind(this);    
 }
 
 DataEditor.prototype.getDom = function()
