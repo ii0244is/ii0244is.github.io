@@ -107,7 +107,7 @@ DateInput.prototype.getDom = function()
 
 DateInput.prototype.setValue = function( value )
 {
-    if( 0 > value.year ){
+    if( 0 < value.year ){
         this.ADBCSelect.value = "AD"
     }else{
         this.ADBCSelect.value = "BC"
@@ -124,7 +124,7 @@ DateInput.prototype.getValue = function()
     let month = Number( this.monthInput.value );
     let day   = Number( this.dayInput.value );
 
-    if( this.ADBCSelect.value === "AD" ){
+    if( this.ADBCSelect.value === "BC" ){
         year = -year;
     }
     return { year, month, day };    

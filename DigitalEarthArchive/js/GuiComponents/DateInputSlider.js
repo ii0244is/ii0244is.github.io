@@ -529,7 +529,7 @@ DateInputSlider.prototype.draw = function()
     ctx.fillStyle = "rgba(" + this.TextColorR + "," + this.TextColorG + "," + this.TextColorB +"," + this.TextColorA + ")";
     let currentTimeText = Math.abs( this.currentTime.year ) + " " + this.currentTime.month + "/" + this.currentTime.day;
     if( this.currentTime.year < 0 ){
-        currentTimeText = "AD " + currentTimeText;
+        currentTimeText = "BC " + currentTimeText;
     }
     ctx.fillText( currentTimeText, 10, 23 );    
 }
