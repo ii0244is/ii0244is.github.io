@@ -63,6 +63,7 @@ let SettingArea = function()
     this.dataEditor    = new DataEditor();
     this.dataViewer    = new DataViewer();
     this.vertexEdit    = new VertexEdit();
+    this.vertexMerge   = new VertexMerge();
 
     this.dom.appendChild( this.settingSelectBar );
     this.dom.appendChild( this.fileManager.getDom() );
@@ -73,6 +74,7 @@ let SettingArea = function()
     this.dom.appendChild( this.dataEditor.getDom() );
     this.dom.appendChild( this.dataViewer.getDom() );
     this.dom.appendChild( this.vertexEdit.getDom() );
+    this.dom.appendChild( this.vertexMerge.getDom() );
 
     this.currentViewName = "";
     this.changeSettingView( "File" );
@@ -92,6 +94,7 @@ SettingArea.prototype.resize = function()
     this.config.resize();       
     this.dataEditor.resize();   
     this.dataViewer.resize();
+    this.vertexMerge.resize();
 }
 
 SettingArea.prototype.setData = function( name, data )
@@ -147,6 +150,7 @@ SettingArea.prototype.changeSettingView = function( name )
     this.dataEditor.show(false);   
     this.dataViewer.show(false);   
     this.vertexEdit.show(false);
+    this.vertexMerge.show(false);
 
     for( let j in this.settingList ){
         if( name == this.settingList[j].name ){
@@ -176,6 +180,9 @@ SettingArea.prototype.changeSettingView = function( name )
     }else if( this.currentViewName == "VertexEdit" ){
         this.settingSelectBar.style.display = "none"
         this.vertexEdit.show(true);
+    }else if( this.currentViewName == "VertexMerge" ){
+        this.settingSelectBar.style.display = "none"
+        this.vertexMerge.show(true);        
     }else{
         this.dataList.show(true);
     }

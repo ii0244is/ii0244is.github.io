@@ -61,6 +61,18 @@ let DataEditor = function()
     this.vertexEditButton.style.margin = "10px 0px 10px 0px" 
     this.vertexEditButton.style.border = "1px solid #444";
     this.vertexEditButton.style.borderStyle = "solid";  
+    this.vertexMergeButton = document.createElement("div");
+    this.vertexMergeButton.textContent = "Merge";
+    this.vertexMergeButton.classList.add( "textButton" );
+    this.vertexMergeButton.style.padding = "5px 20px 5px 20px"
+    this.vertexMergeButton.style.margin = "10px 20px 10px 20px" 
+    this.vertexMergeButton.style.border = "1px solid #444";
+    this.vertexMergeButton.style.borderStyle = "solid";    
+    this.vertexButtonArea = document.createElement("div");
+    this.vertexButtonArea.style.display = "flex";
+    this.vertexButtonArea.style.flexDirection = "row";
+    this.vertexButtonArea.appendChild( this.vertexEditButton );  
+    this.vertexButtonArea.appendChild( this.vertexMergeButton );
 
     this.barParam = new ParametersInput();
     this.barParam.getDom().style.width = "calc( 100% - 130px )";
@@ -124,7 +136,7 @@ let DataEditor = function()
     addParam( "Position", this.position.getDom() );
     addParam( "Start", this.arcStartPosition.getDom() );
     addParam( "Stop", this.arcStopPosition.getDom() );
-    addParam( "Vertex", this.vertexEditButton );
+    addParam( "Vertex", this.vertexButtonArea );
     addParam( "Bar", this.barParam.getDom() );
     addParam( "Arc", this.arcParam.getDom() );
     addParam( "Icon", this.pointIcon.getDom() );
@@ -154,6 +166,10 @@ let DataEditor = function()
     this.vertexEditButton.onclick = function() {
         g_vertexEditor.start( this.currentDataName )
     }.bind(this);
+
+    this.vertexMergeButton.onclick = function() {
+        g_polygonMerge.start( this.currentDataName )
+    }.bind(this);    
 
     this.arcStopPosition.onchange = function( value ) {
         this.changeData( "arcStop", value )
@@ -238,7 +254,6 @@ DataEditor.prototype.setData = function( name, data )
     this.paramInputs["Point"].style.display    = "none";
     this.paramInputs["Line"].style.display     = "none";
     this.paramInputs["Color"].style.display    = "none";
-
     if( data.type == "BarGraph" ){
         this.paramInputs["Position"].style.display = "flex";
         this.paramInputs["Bar"].style.display      = "flex";
@@ -256,9 +271,11 @@ DataEditor.prototype.setData = function( name, data )
         this.paramInputs["Vertex"].style.display   = "flex";
         this.paramInputs["Line"].style.display     = "flex";
         this.paramInputs["Color"].style.display    = "flex";
+        this.vertexMergeButton.style.display       = "none";
     }else if( data.type == "Polygon" ){
         this.paramInputs["Vertex"].style.display   = "flex";
         this.paramInputs["Color"].style.display    = "flex";
+        this.vertexMergeButton.style.display       = "flex";
     }
 
     this.type.textContent = data.type;

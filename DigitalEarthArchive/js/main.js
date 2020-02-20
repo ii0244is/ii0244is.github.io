@@ -15,6 +15,7 @@ let g_timeTraveler;
 let g_pointIcon;
 let g_keywordFilter;
 let g_vertexEditor;
+let g_polygonMerge;
 
 let g_dataList = {};
 let g_isViewerMode = false;
@@ -120,6 +121,7 @@ function createFunctions()
     g_pointIcon = new PointIconManager();
     g_timeTraveler = new TimeTraveler();
     g_vertexEditor = new VertexEditor();
+    g_polygonMerge = new PolygonMerge();
 }
 
 function createMap()
@@ -173,6 +175,7 @@ function setUpEvent()
         if( shiftKeyDown ) return false;
         if( g_newDataManager.mousedown( x, y, isTouch, buttonType ) ) return true;
         if( g_vertexEditor.mousedown( x, y, name ) ) return true;
+        if( g_polygonMerge.mousedown( x, y, name ) ) return true;
         selectObject( name );
     } );
 
@@ -191,6 +194,7 @@ function setUpEvent()
     g_webGLView.setMouseWheelCallback( function( x, y ){
         g_newDataManager.mousewheel();
         g_vertexEditor.mousewheel();
+        g_polygonMerge.mousewheel();
     } );
 
     resizeEvent();
