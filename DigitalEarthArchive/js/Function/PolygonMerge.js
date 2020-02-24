@@ -77,6 +77,11 @@ PolygonMerge.prototype.merge = function()
         return;
     }
 
+    // マージするポリゴンが選択されていない場合は何もしない。
+    if( !(this.namePolygon2 in g_dataList) ){
+        return
+    }
+
     // データ取得
     let data = g_dataList[this.namePolygon1];  
     this.showPolygon( data, this.timePolygon1 );
@@ -121,21 +126,23 @@ PolygonMerge.prototype.mousedown = function( x, y, name )
         return true;
     }
 
-    if( !(name in g_dataList) ){
+    let data = {};
+    if( name in g_dataList ){
+        data = g_dataList[name];
+        if( data.type !== "Polygon" ){
+            return true;
+        }        
+    }else{
         return true;
     }
 
     if( this.namePolygon2 in g_dataList ){
-        let data = g_dataList[this.namePolygon2]; 
-        this.showPolygon( data, this.timePolygon2 );        
+        let lastData = g_dataList[this.namePolygon2]; 
+        this.showPolygon( lastData, this.timePolygon2 );        
     }
 
     this.namePolygon2 = name;
-    let data2 = g_dataList[this.namePolygon2]; 
-    if( data2.type !== "Polygon" ){
-        return true;
-    }
-    this.hidePolygon( data2, this.timePolygon2 );
+    this.hidePolygon( data, this.timePolygon2 );
 
     this.createMergedVertexArray( this.namePolygon1, this.namePolygon2 );
 
