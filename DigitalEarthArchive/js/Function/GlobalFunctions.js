@@ -282,42 +282,46 @@ function loadProjectFile( files )
     {
         let projectData = JSON.parse( reader.result );
         console.log(projectData);
-
-        let objDataList = projectData["dataList"];
-        if( objDataList == null ) return;
-        for( let i = 0; i < objDataList.length; ++i )
-        {
-            let objData = objDataList[i];
-            let objName = g_newDataManager.assignObjName(objData.type);
-            addObject( objName, objData );
-        }
-
-        let configData = projectData["config"];
-        if( configData == null ) return;
-
-        if( configData.view ){
-            g_webGLView.targetPosX = configData.view.x;
-            g_webGLView.targetPosY = configData.view.y;
-            g_webGLView.targetPosZ = configData.view.z;
-            g_webGLView.cameraPosR = configData.view.distance;
-        }
-
-        if( configData.style ){
-            g_settingArea.setColorStyle( configData.style );
-        }
-
-        if( configData.defaultParam ){
-            for( let type in configData.defaultParam ){
-                let param = configData.defaultParam[type];
-                g_newDataManager.setDefalutParameter( type, param );
-                g_settingArea.setDefaultParam( type, param );
-            }
-        }        
-
-        if( configData.time ){
-            g_timeFilter.setCurrentDate( configData.time );
-        }            
+        loadProjectData( projectData );
     }         
+}
+
+function loadProjectData( projectData )
+{
+    let objDataList = projectData["dataList"];
+    if( objDataList == null ) return;
+    for( let i = 0; i < objDataList.length; ++i )
+    {
+        let objData = objDataList[i];
+        let objName = g_newDataManager.assignObjName(objData.type);
+        addObject( objName, objData );
+    }
+
+    let configData = projectData["config"];
+    if( configData == null ) return;
+
+    if( configData.view ){
+        g_webGLView.targetPosX = configData.view.x;
+        g_webGLView.targetPosY = configData.view.y;
+        g_webGLView.targetPosZ = configData.view.z;
+        g_webGLView.cameraPosR = configData.view.distance;
+    }
+
+    if( configData.style ){
+        g_settingArea.setColorStyle( configData.style );
+    }
+
+    if( configData.defaultParam ){
+        for( let type in configData.defaultParam ){
+            let param = configData.defaultParam[type];
+            g_newDataManager.setDefalutParameter( type, param );
+            g_settingArea.setDefaultParam( type, param );
+        }
+    }        
+
+    if( configData.time ){
+        g_timeFilter.setCurrentDate( configData.time );
+    }  
 }
 
 function downloadProjectFile( filePath, downloader )

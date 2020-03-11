@@ -28,8 +28,12 @@ let WorldCountriesFileName = "mapData/ne_50m_admin_0_countries.json";
 
 function appStart()
 {
+    let projectName = "";
     if( location.hash ){
         g_isViewerMode = true;
+        if( location.hash !== "#ViewerMode" ){
+            projectName = location.hash.substr(1);
+        }
     }
 
     g_webGLView = new WebGLCanvas();
@@ -38,6 +42,14 @@ function appStart()
     createGui();
     createMap();
     setUpEvent();
+
+    if( projectName !== "" ){
+        requestJsonData( "projects/" + projectName + ".json", function(data){
+            console.log(data);
+            loadProjectData( data )
+        } );
+    }
+
     mainLoop();
 }
 
