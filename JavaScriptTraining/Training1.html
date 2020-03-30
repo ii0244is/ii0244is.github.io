@@ -1,0 +1,985 @@
+<html>
+
+<!-- ///////////////////////////////////////
+    Body
+//////////////////////////////////////// -->
+
+<body onload="initialize()">
+    <div id="main">
+        <div id="paletteArea"> 
+            <div class="paletteButton" onclick="onClickSquareButton()">
+                <div class="paletteButtonText">■</div>
+            </div> 
+            <div class="paletteButton" onclick="onClickCircleButton()">
+                <div class="paletteButtonText">●</div>
+            </div> 
+            <div class="paletteButton" onclick="onClickTriangleButton()">
+                <div class="paletteButtonText">▲</div>
+            </div>                      
+        </div>
+        <canvas id="canvasArea">    
+        </canvas>
+        <div id="propertyArea">
+            <div id="itemListArea">
+                <div id="itemListLabel">
+                    <div>Item List</div>
+                </div>                    
+                <div id="itemList"></div>                
+            </div>
+            <div id="paramInputArea">
+                <div id="paramAreaLabel">
+                    <div>Parameter</div>
+                </div>
+                <div id="squareParamArea" class="paramArea">
+                    <div class="paramRow">
+                        <div class="paramName">Name</div>
+                        <input id="squareParamName" type="text" class="paramInputText"
+                            onchange="onChangeSquareParamName()">
+                        </input>
+                    </div>                    
+                    <div class="paramRow">
+                        <div class="paramName">Left</div>
+                        <input id="squareParamX" type="number" class="paramInputNumber"
+                            onchange="onChangeSquareParamX()">
+                        </input>
+                    </div>
+                    <div class="paramRow">
+                        <div class="paramName">Top</div>
+                        <input id="squareParamY" type="number" class="paramInputNumber"
+                            onchange="onChangeSquareParamY()">
+                        </input>
+                    </div>        
+                    <div class="paramRow">
+                        <div class="paramName">Width</div>
+                        <input id="squareParamWidth" type="number" class="paramInputNumber"
+                            onchange="onChangeSquareParamWidth()">
+                        </input>
+                    </div>
+                    <div class="paramRow">
+                        <div class="paramName">Height</div>
+                        <input id="squareParamHeight" type="number" class="paramInputNumber"
+                            onchange="onChangeSquareParamHeight()">
+                        </input>
+                    </div>
+                    <div class="paramRow">
+                        <div class="paramName">Color</div>
+                        <input id="squareParamColor" type="color" class="paramInputColor"
+                            onchange="onChangeSquareParamColor()">
+                        </input>
+                    </div> 
+                    <div class="paramRow">
+                        <div class="paramName">Layer</div>
+                        <div>
+                            <div id="squareParamLayer" class="paramLayer"></div>
+                            <button onclick="onChangeLayerUp()" class="paramLayerButton">↑</button>
+                            <button onclick="onChangeLayerDown()" class="paramLayerButton">↓</button>
+                        </div>
+                    </div>                     
+                </div>                
+                <div id="circleParamArea" class="paramArea">
+                    <div class="paramRow">
+                        <div class="paramName">Name</div>
+                        <input id="circleParamName" type="text" class="paramInputText"
+                            onchange="onChangeCircleParamName()">
+                        </input>
+                    </div>                    
+                    <div class="paramRow">
+                        <div class="paramName">x</div>
+                        <input id="circleParamX" type="number" class="paramInputNumber"
+                            onchange="onChangeCircleParamX()">
+                        </input>
+                    </div>
+                    <div class="paramRow">
+                        <div class="paramName">y</div>
+                        <input id="circleParamY" type="number" class="paramInputNumber"
+                            onchange="onChangeCircleParamY()">
+                        </input>
+                    </div>        
+                    <div class="paramRow">
+                        <div class="paramName">Radius</div>
+                        <input id="circleParamRadius" type="number" class="paramInputNumber"
+                            onchange="onChangeCircleParamRadius()">
+                        </input>
+                    </div>
+                    <div class="paramRow">
+                        <div class="paramName">Oblateness</div>
+                        <input id="circleParamOblateness" type="number" class="paramInputNumber"
+                            onchange="onChangeCircleParamOblateness()" step="0.1">
+                        </input>
+                    </div>
+                    <div class="paramRow">
+                        <div class="paramName">Rotation</div>
+                        <input id="circleParamRotation" type="number" class="paramInputNumber"
+                            onchange="onChangeCircleParamRotation()">
+                        </input>
+                    </div>   
+                    <div class="paramRow">
+                        <div class="paramName">Color</div>
+                        <input id="circleParamColor" type="color" class="paramInputColor"
+                            onchange="onChangeCircleParamColor()">
+                        </input>
+                    </div>     
+                    <div class="paramRow">
+                        <div class="paramName">Layer</div>
+                        <div>
+                            <div id="circleParamLayer" class="paramLayer"></div>
+                            <button onclick="onChangeLayerUp()" class="paramLayerButton">↑</button>
+                            <button onclick="onChangeLayerDown()" class="paramLayerButton">↓</button>
+                        </div>
+                    </div>                                     
+                </div>
+                <div id="triangleParamArea" class="paramArea">
+                    <div class="paramRow">
+                        <div class="paramName">Name</div>
+                        <input id="triangleParamName" type="text" class="paramInputText"
+                            onchange="onChangeTriangleParamName()">
+                        </input>
+                    </div>                    
+                    <div class="paramRow">
+                        <div class="paramName">V1 x</div>
+                        <input id="triangleParamV1X" type="number" class="paramInputNumber"
+                            onchange="onChangeTriangleParamV1X()">
+                        </input>
+                    </div>
+                    <div class="paramRow">
+                        <div class="paramName">V1 y</div>
+                        <input id="triangleParamV1Y" type="number" class="paramInputNumber"
+                            onchange="onChangeTriangleParamV1Y()">
+                        </input>
+                    </div>       
+                    <div class="paramRow">
+                        <div class="paramName">V2 x</div>
+                        <input id="triangleParamV2X" type="number" class="paramInputNumber"
+                            onchange="onChangeTriangleParamV2X()">
+                        </input>
+                    </div>
+                    <div class="paramRow">
+                        <div class="paramName">V2 y</div>
+                        <input id="triangleParamV2Y" type="number" class="paramInputNumber"
+                            onchange="onChangeTriangleParamV2Y()">
+                        </input>
+                    </div>    
+                    <div class="paramRow">
+                        <div class="paramName">V3 x</div>
+                        <input id="triangleParamV3X" type="number" class="paramInputNumber"
+                            onchange="onChangeTriangleParamV3X()">
+                        </input>
+                    </div>
+                    <div class="paramRow">
+                        <div class="paramName">V3 y</div>
+                        <input id="triangleParamV3Y" type="number" class="paramInputNumber"
+                            onchange="onChangeTriangleParamV3Y()">
+                        </input>
+                    </div>                                      
+                    <div class="paramRow">
+                        <div class="paramName">Color</div>
+                        <input id="triangleParamColor" type="color" class="paramInputColor"
+                            onchange="onChangeTriangleParamColor()">
+                        </input>
+                    </div>     
+                    <div class="paramRow">
+                        <div class="paramName">Layer</div>
+                        <div>
+                            <div id="triangleParamLayer" class="paramLayer"></div>
+                            <button onclick="onChangeLayerUp()" class="paramLayerButton">↑</button>
+                            <button onclick="onChangeLayerDown()" class="paramLayerButton">↓</button>
+                        </div>
+                    </div> 
+                </div>                
+            </div>             
+        </div>    
+    </div>
+</body>
+
+
+<!-- ///////////////////////////////////////
+    Script
+//////////////////////////////////////// -->
+
+<script>
+
+let g_state = {};
+
+function initialize()
+{    
+    g_state.itemList = [];
+    g_state.selectedItemID = "";   
+    window.addEventListener( "resize", () => {
+        resize();
+    });
+    resize();
+}
+
+//////////////////////////////////////////
+// Event
+//////////////////////////////////////////
+
+function onClickSquareButton(){
+    dispatch( "addSquare" );
+}
+
+function onClickCircleButton(){
+    dispatch( "addCircle" );
+}
+
+function onClickTriangleButton(){
+    dispatch( "addTriangle" );
+}
+
+function onChangeSquareParamName(){
+    let input = document.getElementById("squareParamName");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "name",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );
+}
+
+function onChangeSquareParamX(){
+    let input = document.getElementById("squareParamX");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "x",
+        value : Number(input.value),
+    }
+    dispatch( "changeItemParam", param );
+}
+
+function onChangeSquareParamY(){
+    let input = document.getElementById("squareParamY");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "y",
+        value : Number(input.value),
+    }    
+    dispatch( "changeItemParam", param );    
+}
+
+function onChangeSquareParamWidth(){
+    let input = document.getElementById("squareParamWidth");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "width",
+        value : Number(input.value),
+    }    
+    dispatch( "changeItemParam", param );   
+}
+
+function onChangeSquareParamHeight(){
+    let input = document.getElementById("squareParamHeight");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "height",
+        value : Number(input.value),
+    }
+    dispatch( "changeItemParam", param );        
+}
+
+function onChangeSquareParamColor(){
+    let input = document.getElementById("squareParamColor");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "color",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );         
+}
+
+function onChangeCircleParamName(){
+    let input = document.getElementById("circleParamName");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "name",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeCircleParamX(){
+    let input = document.getElementById("circleParamX");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "x",
+        value : Number( input.value ),
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeCircleParamY(){
+    let input = document.getElementById("circleParamY");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "y",
+        value : Number( input.value ),
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeCircleParamRadius(){
+    let input = document.getElementById("circleParamRadius");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "radius",
+        value : Number( input.value ),
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeCircleParamOblateness(){
+    let input = document.getElementById("circleParamOblateness");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "oblateness",
+        value : Number( input.value ),
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeCircleParamRotation(){
+    let input = document.getElementById("circleParamRotation");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "rotation",
+        value : Number( input.value ),
+    }
+    dispatch( "changeItemParam", param );     
+}
+
+function onChangeCircleParamColor(){
+    let input = document.getElementById("circleParamColor");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "color",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeTriangleParamName(){
+    let input = document.getElementById("triangleParamName");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "name",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeTriangleParamV1X(){
+    let input = document.getElementById("triangleParamV1X");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "v1x",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );    
+}
+
+function onChangeTriangleParamV1Y(){
+    let input = document.getElementById("triangleParamV1Y");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "v1y",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeTriangleParamV2X(){
+    let input = document.getElementById("triangleParamV2X");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "v2x",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeTriangleParamV2Y(){
+    let input = document.getElementById("triangleParamV2Y");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "v2y",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeTriangleParamV3X(){
+    let input = document.getElementById("triangleParamV3X");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "v3x",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeTriangleParamV3Y(){
+    let input = document.getElementById("triangleParamV3Y");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "v3y",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeTriangleParamColor(){
+    let input = document.getElementById("triangleParamColor");
+    let param = {
+        id : getSelectedItemID(),
+        paramName : "color",
+        value : input.value,
+    }
+    dispatch( "changeItemParam", param );       
+}
+
+function onChangeLayerUp(){
+    let id = getSelectedItemID();
+    dispatch( "changeItemLayer", { id, isUp:true} );
+}
+
+function onChangeLayerDown(){
+    let id = getSelectedItemID();
+    dispatch( "changeItemLayer", { id, isUp:false} );
+}
+
+function resize(){
+    let canvas = document.getElementById( "canvasArea" );    
+    let width = canvas.clientWidth;
+    let height = canvas.clientHeight;
+    canvas.width = width;
+    canvas.height = height;    
+    render();
+}
+
+//////////////////////////////////////////
+// Getter
+//////////////////////////////////////////
+
+function getItemList(){
+    return g_state.itemList;
+}
+
+function getItemByID( id ){
+    for( let i in g_state.itemList ){
+        let item = g_state.itemList[i];
+        if( id === item.id ){
+            return item;
+        }
+    }
+    return -1;
+}
+
+function getItemIdxByID( id ){
+    let itemList = getItemList();
+    let idx = -1;
+    for( let i = 0; i < itemList.length; ++i ){
+        if( id === itemList[i].id ){
+            idx = i;
+            break;
+        }
+    }
+    return idx;
+}
+
+function getSelectedItemID(){
+    return g_state.selectedItemID;
+}
+
+function getSelectedItem(){
+    return getItemByID( g_state.selectedItemID );
+}
+
+//////////////////////////////////////////
+// Action
+//////////////////////////////////////////
+
+function dispatch( actionName, param )
+{
+    if( actionName === "addSquare" ){
+        let item = createNewItem( "Square" );
+        g_state.itemList.unshift(item);
+        g_state.selectedItemID = item.id;
+    }else if( actionName === "addCircle" ){
+        let item = createNewItem( "Circle" );
+        g_state.itemList.unshift(item);
+        g_state.selectedItemID = item.id;
+    }else if( actionName === "addTriangle" ){
+        let item = createNewItem( "Triangle" );
+        g_state.itemList.unshift(item);
+        g_state.selectedItemID = item.id;
+    }else if( actionName === "selectItem" ){
+        g_state.selectedItemID = param.id;
+    }else if( actionName === "changeItemParam" ){
+        let item = getItemByID( param.id );
+        item[param.paramName] = param.value;
+    }else if( actionName === "changeItemLayer" ){
+        changeLayer(param.id, param.isUp); 
+    }else if( actionName === "deleteItem" ){
+        deleteItem(param.id);
+    }
+    render();
+}
+
+function createNewItem( type ){
+
+    function createGUID(){
+        return new Date().getTime().toString(16) + Math.floor(1000*Math.random()).toString(16);
+    }    
+    
+    let initialPosX = 20 * g_state.itemList.length + 20;
+    let initialPosY = 20 * g_state.itemList.length + 20;
+    let item = {
+        id : createGUID(),
+        name : type + "_" + g_state.itemList.length,
+        type : type,
+        color : "#ee5555",
+    }
+
+    if( type === "Square" ){
+        item.x = initialPosX;
+        item.y = initialPosY;        
+        item.width = 100;
+        item.height = 100;
+    }else if( type === "Circle" ){
+        item.x = initialPosX + 50;
+        item.y = initialPosY + 50;          
+        item.radius = 50;
+        item.oblateness = 1;
+        item.rotation = 0;
+    }else if( type === "Triangle" ){
+        item.v1x = initialPosX + 50;
+        item.v1y = initialPosY; 
+        item.v2x = initialPosX;
+        item.v2y = initialPosY + 100;  
+        item.v3x = initialPosX + 100;
+        item.v3y = initialPosY + 100;                  
+    }    
+
+    return item;
+}
+
+function changeLayer( id, isUp ){   
+    let idx = getItemIdxByID( id );
+    if( idx === 0 && isUp ){
+        return;
+    } 
+    let itemList = getItemList();
+    if( idx === itemList.length-1 && !isUp ){
+        return;
+    }
+
+    let temp = itemList[idx];
+    if(isUp){
+        itemList[idx] = itemList[idx-1];
+        itemList[idx-1] = temp;
+    }else{
+        itemList[idx] = itemList[idx+1];
+        itemList[idx+1] = temp;
+    }
+}
+
+function deleteItem( id ){
+    let idx = getItemIdxByID( id );
+    let itemList = getItemList(); 
+    if( 0 <= idx && idx < itemList.length ){
+        itemList.splice( idx, 1 );
+    }
+}
+
+//////////////////////////////////////////
+// Render
+//////////////////////////////////////////
+
+function render()
+{
+    updateInput();
+    drawCanvas();
+}
+
+function updateInput()
+{
+    // Update item list
+    let itemListArea = document.getElementById( "itemList" );
+    while( itemListArea.lastElementChild ){
+        itemListArea.removeChild( itemListArea.lastElementChild );
+    }
+    let itemList = getItemList();
+    for( let i in itemList ){
+        let type = itemList[i].type;
+        let name = itemList[i].name;
+        let id = itemList[i].id;
+        let row = document.createElement("div");
+        row.classList.add("itemListRow");
+        if( id === getSelectedItemID() ){
+            row.style.backgroundColor = "#ec4";
+            row.style.color = "333";
+        }
+        let nameArea = document.createElement("div");
+        if( type === "Square" ){
+            nameArea.textContent = "■ ";
+        }else if( type === "Circle" ){
+            nameArea.textContent = "● ";
+        }else if( type === "Triangle" ){
+            nameArea.textContent = "▲ ";
+        }
+        nameArea.textContent += name;
+        let deleteButton = document.createElement("button");
+        deleteButton.classList.add("itemDeleteButton");
+        deleteButton.textContent = "×";
+        deleteButton.onclick = () => {
+            dispatch( "deleteItem", { id } );            
+        }
+        row.onclick = () => {
+            dispatch( "selectItem", { id } );
+        }
+        row.appendChild(nameArea);  
+        row.appendChild(deleteButton);        
+        itemListArea.appendChild(row);
+    }
+
+    // Update param input
+    let squareParamArea = document.getElementById( "squareParamArea" );
+    let circleParamArea = document.getElementById( "circleParamArea" );
+    let triangleParamArea = document.getElementById( "triangleParamArea" ); 
+    squareParamArea.style.display = "none";
+    circleParamArea.style.display = "none";
+    triangleParamArea.style.display = "none";
+    let item = getSelectedItem();
+    if( item !== -1 ){
+        let selectedItemType = item.type;
+        let idx = getItemIdxByID( getSelectedItemID() );
+        if( selectedItemType === "Square" ){
+            squareParamArea.style.display = "flex";
+            document.getElementById( "squareParamName" ).value = item.name;  
+            document.getElementById( "squareParamX" ).value = item.x;
+            document.getElementById( "squareParamY" ).value = item.y;
+            document.getElementById( "squareParamWidth" ).value = item.width;
+            document.getElementById( "squareParamHeight" ).value = item.height;   
+            document.getElementById( "squareParamColor" ).value = item.color;                          
+            document.getElementById( "squareParamLayer" ).textContent = idx;     
+        }else if( selectedItemType === "Circle" ){
+            circleParamArea.style.display = "flex";
+            document.getElementById( "circleParamName" ).value = item.name;
+            document.getElementById( "circleParamX" ).value = item.x;
+            document.getElementById( "circleParamY" ).value = item.y;
+            document.getElementById( "circleParamRadius" ).value = item.radius;
+            document.getElementById( "circleParamOblateness" ).value = item.oblateness;
+            document.getElementById( "circleParamRotation" ).value = item.rotation;
+            document.getElementById( "circleParamColor" ).value = item.color;                          
+            document.getElementById( "circleParamLayer" ).textContent = idx;                      
+        }else if( selectedItemType === "Triangle" ){
+            triangleParamArea.style.display = "flex";
+            document.getElementById( "triangleParamName" ).value = item.name;
+            document.getElementById( "triangleParamV1X" ).value = item.v1x;
+            document.getElementById( "triangleParamV1Y" ).value = item.v1y;
+            document.getElementById( "triangleParamV2X" ).value = item.v2x;
+            document.getElementById( "triangleParamV2Y" ).value = item.v2y;   
+            document.getElementById( "triangleParamV3X" ).value = item.v3x;
+            document.getElementById( "triangleParamV3Y" ).value = item.v3y;      
+            document.getElementById( "triangleParamColor" ).value = item.color;                          
+            document.getElementById( "triangleParamLayer" ).textContent = idx;                 
+        }
+    }
+}
+
+function drawCanvas()
+{
+    let canvas = document.getElementById( "canvasArea" );
+    let ctx = canvas.getContext("2d");
+    ctx.clearRect( 0, 0, canvas.width, canvas.height );
+
+    function drawSquare( x, y, w, h, color, isSelected ){
+        ctx.fillStyle = color;
+        ctx.fillRect( x, y, w, h );
+        if( isSelected ){
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#ec4";
+            ctx.strokeRect( x, y, w, h );
+        }
+    }
+
+    function drawEllipse( x, y, rad, oblateness, rot, color, isSelected ){
+        ctx.fillStyle = color;
+        let radX = rad;
+        let radY = rad * oblateness;
+        let rotRad = rot * Math.PI / 180; 
+        ctx.beginPath();
+        ctx.ellipse( x, y, radX, radY, rotRad, 0, 2*Math.PI );
+        ctx.fill();
+        if( isSelected ){
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#ec4";
+            ctx.stroke();
+        }        
+    }    
+
+    function drawTriangle( v1, v2, v3, color, isSelected ){
+		ctx.beginPath();
+		ctx.moveTo(v1.x, v1.y);
+		ctx.lineTo(v2.x, v2.y);
+		ctx.lineTo(v3.x, v3.y);
+		ctx.closePath();
+		ctx.fillStyle = color;
+		ctx.fill();
+        if( isSelected ){
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#ec4";
+            ctx.stroke();
+        }        
+    }
+
+    let itemList = getItemList();
+    for( let i = itemList.length-1; i >= 0; --i ){
+        let item = itemList[i];
+        let isSelected = ( item.id === getSelectedItemID() );
+        if( item.type === "Square" ){
+            let x = item.x;
+            let y = item.y;
+            let w = item.width;
+            let h = item.height;
+            let c = item.color;
+            drawSquare( x, y, w, h, c, isSelected );
+        }else if( item.type === "Circle" ){
+            let x = item.x;
+            let y = item.y;
+            let rad = item.radius;
+            let obl = item.oblateness;
+            let rot = item.rotation;
+            let col = item.color;
+            drawEllipse( x, y, rad, obl, rot, col, isSelected );
+        }else if( item.type === "Triangle" ){
+            let v1 = { x:item.v1x, y:item.v1y };
+            let v2 = { x:item.v2x, y:item.v2y };
+            let v3 = { x:item.v3x, y:item.v3y };
+            let col = item.color; 
+            drawTriangle( v1, v2, v3, col, isSelected );                 
+        }
+    }
+}
+
+</script>
+
+
+<!-- ///////////////////////////////////////
+    Style 
+//////////////////////////////////////// -->
+
+<style>
+
+body{
+    margin: 0px;
+}
+
+#main{
+    width : 100%;
+    height : 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    color: #eee;
+}
+
+#paletteArea{
+    width : 40px;
+    height : calc( 100% - 10px );    
+    background-color: #00a69b;
+    display: flex;
+    flex-direction: column;
+    padding: 5px 10px 5px 10px
+}
+
+.paletteButton{
+    width : 40px;
+    height : 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center; 
+    margin: 5px 0px 5px 0px;   
+    border-radius: 5px;
+    background-color: #004096;
+}
+
+.paletteButton:hover{
+    width : 38px;
+    height : 38px;    
+    cursor: pointer;
+    border: solid 1px #eee;
+    border-style: solid;    
+}
+
+.paletteButtonText{
+    color: #eee;  
+    font-size: 28px;
+}
+
+#canvasArea{
+    width : calc( 100% - 360px );
+    height : 100%;    
+}
+
+#propertyArea{
+    width : 300px;
+    height : 100%;    
+    background-color: #00a69b;
+    display: flex;
+    flex-direction: column;
+}
+
+#itemListArea{
+    width : 100%;
+    height: 50%;
+}
+
+#itemListLabel{
+    display: flex;
+    flex-direction: row;
+    align-items: center;    
+    width: calc( 100% - 20px );
+    height: 24px;
+    background-color: #008b9b;
+    padding: 5px 10px 5px 10px;
+}
+
+#itemList{
+    width: calc( 100% - 20px );
+    height: calc( 100% - 44px );
+    padding: 5px 10px 5px 10px;   
+    overflow-y: auto;     
+}
+
+.itemListRow{
+    padding: 5px 5px 5px 5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: calc( 100% - 10px );
+    cursor: pointer;
+}
+
+.itemListRow:hover{
+    background-color : #992;
+    opacity: 0.8;
+}
+
+.itemDeleteButton{
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    background-color: #004096;
+    color: #eee;
+    font-size: 18px;
+    border-style: none;
+}
+
+.itemDeleteButton:hover{ 
+    border: solid 1px #eee;
+    border-style: solid;    
+    cursor: pointer;
+}
+
+#paramInputArea{
+    width : 100%;
+    height: 50%;
+}
+
+#paramAreaLabel{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: calc( 100% - 20px );
+    height: 24px;
+    background-color: #008b9b;
+    padding: 5px 10px 5px 10px;
+}
+
+.paramArea{
+    display: flex;    
+    width : calc( 100% - 20px );
+    height: calc( 100% - 44px );
+    display: flex;
+    flex-direction: column;  
+    padding: 5px 10px 5px 10px;  
+    overflow-y: auto;
+}
+
+.paramRow{
+    display: flex;
+    width : 100%;
+    flex-direction: row;
+    align-items: center;
+    margin: 5px 0px 5px 0px;
+}
+
+.paramName{
+    width : 120px;
+}
+
+.paramInputText{
+    width : calc( 100% - 120px );
+    padding : 5px;
+    border-radius: 5px;
+}
+
+.paramInputNumber{
+    width: 80px;
+    padding : 5px;
+    border-radius: 5px;
+}
+
+.paramInputColor{
+    border-radius: 5px;    
+}
+
+.paramLayer{
+    display: inline;
+    margin: 0px 5px 0px 5px;
+}
+
+.paramLayerButton{
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    background-color: #004096;
+    color: #eee;
+    font-size: 12px;
+    border-style: none;
+}
+
+.paramLayerButton:hover{ 
+    border: solid 1px #eee;
+    border-style: solid;    
+    cursor: pointer;
+}
+
+.separator{
+    width : 100%;
+    margin: 10px 0px 10px 0px;
+    border: solid 1px #eee;
+    border-style: solid none none none;
+}
+
+::-webkit-scrollbar{
+    width: 10px;
+}
+
+::-webkit-scrollbar-track{
+    background: #00a69b;
+    border-left: solid 1px #00a69b;
+}
+
+::-webkit-scrollbar-thumb{
+    background: #ccc;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 2px #00a69b;
+}
+
+</style>
+
+</html>
