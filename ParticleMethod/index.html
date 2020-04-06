@@ -1,0 +1,1075 @@
+<!DOCTYPE HTML> 
+<html lang="en"> 
+
+<head>
+<title>Particle Method</title>
+<meta charset="utf-8">
+</head>
+
+<script type="text/javascript" src="glMatrix.js"></script>
+
+<script id = 'vs' type = "x-shader/x-vertex" >
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec4 aVertexColor;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uMWMatrix;
+uniform mat4 uPMatrix;
+uniform mat4 uNormalMatrix;
+
+varying vec3 vNormal;
+varying vec3 vPosition;
+varying vec4 vColor;
+
+void main() 
+{
+	vColor = aVertexColor;
+	vNormal = ( uNormalMatrix * vec4( aVertexNormal, 1.0 ) ).xyz;
+	vPosition = ( uMWMatrix *vec4( aVertexPosition, 1.0 ) ).xyz;
+	gl_Position = uPMatrix * uMVMatrix * uMWMatrix * vec4( aVertexPosition, 1.0 );
+}                                                   
+</script> 
+
+<script id = 'fs' type = "x-shader/x-fragment" >
+precision mediump float;
+
+varying vec3 vNormal;
+varying vec3 vPosition;
+varying vec4 vColor;
+
+uniform vec3 uLightPos;
+
+void main() 
+{
+	vec3 LightDirection = normalize( uLightPos - vPosition );	
+	vec3 Normal = normalize( vNormal );
+	float distance = length( uLightPos - vPosition );
+	float atte = 1.0 / ( 1.0 + 0.2 * distance );
+	float diffuse = clamp( dot( Normal, LightDirection ), 0.1 , 1.0 );
+	vec4 Color = vColor * vec4( vec3( diffuse * atte ), 1.0 ) + 0.1;
+
+	gl_FragColor = Color;
+}                                             
+</script> 
+
+<script type="text/javascript">
+
+var gl;
+var canvas;
+var shaderProgram;
+var vertexBuffer;
+
+// sim information
+var ARRAY_SIZE          = 50000;
+var PARTICLE_DISTANCE   = 0.035;
+var WALL_THICKNESS      = 2;
+var WATER_THICKNESS     = 13;
+var GHOST               = -1;
+var FLUID               = 0; // 流体粒子
+var WALL                = 1; // 壁粒子
+var NUM_TYP             = 2; // 粒子の種類数
+var ON                  = 1;
+var OFF                 = 0;
+var DENSITY_FLUID       = 1000;    
+var DENSITY_WALL        = 1000;    
+var SOUND               = 22.0;    
+var KINEMATIC_VISCOSITY = (1.0E-6);
+var COURANT             = 0.1;     
+var RESTITUTION         = 0.2;     
+var LIMIT_DISTANCE      = 0.9;     
+var G_X                 = 0.0;  
+var G_Y                 = -9.8;
+var G_Z                 = 0.0;
+var DELTA_T             = 0.0025;
+var position               = [];
+var particleType           = [];
+var velocity               = [];
+var acceleration           = [];
+var pressure               = [];
+var numberDensity          = [];
+var velocityAfterCollision = [];
+var Density                = [];
+var DensityInv             = [];
+var bucketFirst            = [];
+var bucketLast             = [];  
+var NextParticle           = [];
+var MIN_X;
+var MIN_Y;
+var MIN_Z;
+var MAX_X;
+var MAX_Y;
+var MAX_Z;
+var r;           
+var r2;              
+var lengthBucket;    
+var lengthBucket2;   
+var lengthBucketInv;
+var numBucketX;   
+var numBucketY;   
+var numBucketZ;   
+var numBucketXY;  
+var NumberOfBuckets;
+var NumberOfParticles;
+var n0;
+var Lambda;
+var A1; 
+var A2;
+var A3;
+var rLimit;
+var rLimit2;
+var COL;
+var Time;  
+
+// WebGL Buffers
+var bufferVertexPos;
+var bufferVertexIndex;
+var bufferVertexNormal;
+
+// Light Position
+var nLightPosX;
+var nLightPosY;
+var nLightPosZ;
+
+// Camera Position
+var nCameraPosZoom;
+var nCameraPosAlpha;
+var nCameraPosBeta;
+
+// Matrix
+var modelViewMatrix;
+var modelWorldMatrix;
+var projectionMatrix;
+var normalMatrix;
+
+// Animation
+var animationID;
+var bAnimationFrag;
+var pointX;
+var pointY;
+
+function createGLContext( canvas )
+{
+	var names = ["webgl", "experimental-webgl"];
+ 	var context = null;
+  
+ 	for( var i=0; i < names.length; i++) 
+  	{
+    	try
+    	{
+      		context = canvas.getContext( names[ i ] );
+    	} 
+    	catch( e ) {}
+    
+    	if( context ) { break; }
+  	}
+  
+  	if( context )
+  	{
+    	context.viewportWidth = canvas.width;
+    	context.viewportHeight = canvas.height;
+  	}
+  	else 
+  	{
+   		alert( "Failed to create WebGL context!" );
+  	}
+  
+    return context;
+}
+
+function loadShader( type, shaderSource )
+{
+  	var shader = gl.createShader( type );
+  	gl.shaderSource( shader, shaderSource );
+  	gl.compileShader( shader );
+  
+  	if( !gl.getShaderParameter( shader, gl.COMPILE_STATUS ) ) 
+  	{
+    	alert( "Error compiling shader" + gl.getShaderInfoLog( shader ) );
+      	gl.deleteShader( shader );   
+      	return null;
+  	}
+  
+  	return shader;  
+}
+
+function setupShaders()
+{   
+	var vertexShaderSource   = document.getElementById( 'vs' );
+	var fragmentShaderSource = document.getElementById( 'fs' );  	
+  	
+  	var vertexShader   = loadShader( gl.VERTEX_SHADER,   vertexShaderSource.text   );
+  	var fragmentShader = loadShader( gl.FRAGMENT_SHADER, fragmentShaderSource.text );
+  
+  	shaderProgram = gl.createProgram();
+  	gl.attachShader( shaderProgram, vertexShader );
+  	gl.attachShader( shaderProgram, fragmentShader );
+  	gl.linkProgram( shaderProgram );
+
+  	if( !gl.getProgramParameter( shaderProgram, gl.LINK_STATUS ) ) 
+  	{
+    	alert("Failed to setup shaders");
+  	}
+
+  	gl.useProgram( shaderProgram );
+  	
+  	// アトリビュート変数
+	shaderProgram.vertexPositionAttribute = gl.getAttribLocation( shaderProgram, "aVertexPosition" );
+	shaderProgram.vertexColorAttribute    = gl.getAttribLocation( shaderProgram, "aVertexColor"    );
+	shaderProgram.vertexNormalAttribute   = gl.getAttribLocation( shaderProgram, "aVertexNormal"   );
+		
+	// ユニフォーム変数
+	shaderProgram.uniformMWMatrix         = gl.getUniformLocation( shaderProgram, "uMWMatrix" );
+	shaderProgram.uniformMVMatrix         = gl.getUniformLocation( shaderProgram, "uMVMatrix" );
+	shaderProgram.uniformProjMatrix       = gl.getUniformLocation( shaderProgram, "uPMatrix"  );
+	shaderProgram.uniformNormalMatrix     = gl.getUniformLocation( shaderProgram, "uNormalMatrix" );
+	shaderProgram.uniformLightPosition    = gl.getUniformLocation( shaderProgram, "uLightPos" );
+
+	gl.enableVertexAttribArray( shaderProgram.vertexPositionAttribute );
+	gl.enableVertexAttribArray( shaderProgram.vertexNormalAttribute );
+	
+	modelWorldMatrix = mat4.create();
+	modelViewMatrix  = mat4.create();
+	projectionMatrix = mat4.create();
+	normalMatrix = mat4.create();
+}
+
+function createSphere()
+{
+	var radius = 1;
+ 	var stacks = 20;
+	var slices = 20;	
+	
+	var vertexPos    = [ ( stacks + 1 ) * slices * 3 ];
+	var vertexNormal = [ ( stacks + 1 ) * slices * 3 ];
+	var vertexIndex  = [ stacks * slices * 6 ];	
+	
+  	for( var i = 0; i < stacks + 1; ++i )
+  	{
+    	for( var j = 0; j < slices; ++j )
+		{
+		  	var alpha = 3.141592 * 2 / ( slices - 1 ) * j;
+	  		var beta  = 3.141592 / stacks * i;
+
+			vertexPos[slices * i * 3 + j * 3 + 0] = radius * Math.sin(beta) * Math.sin(alpha);
+	  		vertexPos[slices * i * 3 + j * 3 + 1] = radius * Math.sin(beta) * Math.cos(alpha);
+      		vertexPos[slices * i * 3 + j * 3 + 2] = radius * Math.cos(beta);
+
+			vertexNormal[slices * i * 3 + j * 3 + 0] = radius * Math.sin(beta) * Math.sin(alpha);
+			vertexNormal[slices * i * 3 + j * 3 + 1] = radius * Math.sin(beta) * Math.cos(alpha);
+      		vertexNormal[slices * i * 3 + j * 3 + 2] = radius * Math.cos(beta);
+		}
+  	}	
+	
+  	for( var i = 0; i < stacks; ++i )
+  	{
+    	for( var j = 0; j < slices; ++j )
+		{
+	 	 	if( j != slices - 1 )
+	  		{
+	    		vertexIndex[ slices * i * 6 + j * 6 + 0] = slices * i + j;
+	    		vertexIndex[ slices * i * 6 + j * 6 + 1] = slices * i + j + 1;
+	    		vertexIndex[ slices * i * 6 + j * 6 + 2] = slices * (i + 1) + j;
+	    		vertexIndex[ slices * i * 6 + j * 6 + 3] = slices * i + j + 1;
+	    		vertexIndex[ slices * i * 6 + j * 6 + 4] = slices * (i + 1) + j + 1;
+	    		vertexIndex[ slices * i * 6 + j * 6 + 5] = slices * (i + 1) + j;
+	  		}
+	  		else
+	  		{
+	    		vertexIndex[ slices * i * 6 + j * 6 + 0] = slices * i + j;
+	    		vertexIndex[ slices * i * 6 + j * 6 + 1] = slices * i;
+	    		vertexIndex[ slices * i * 6 + j * 6 + 2] = slices * (i + 1) + j;
+	    		vertexIndex[ slices * i * 6 + j * 6 + 3] = slices * i;
+	    		vertexIndex[ slices * i * 6 + j * 6 + 4] = slices * (i + 1);
+	    		vertexIndex[ slices * i * 6 + j * 6 + 5] = slices * (i + 1) + j;	  
+	  		}
+		}
+  	}	
+	
+	bufferVertexPos = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, bufferVertexPos );	
+	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertexPos ), gl.STATIC_DRAW );
+	bufferVertexPos.itemSize = 3;
+	bufferVertexPos.numberOfItems = ( stacks + 1 ) * slices * 3;
+
+	bufferVertexNormal = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, bufferVertexNormal );
+	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertexNormal ), gl.STATIC_DRAW );
+	bufferVertexNormal.itemSize = 3;
+	bufferVertexNormal.numberOfItems = ( stacks + 1 ) * slices * 3;
+
+	bufferVertexIndex = gl.createBuffer();
+	gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, bufferVertexIndex );
+	gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, new Uint16Array( vertexIndex ), gl.STATIC_DRAW );
+	bufferVertexIndex.itemSize = 1;
+	bufferVertexIndex.numberOfItems = stacks * slices * 6;
+}
+
+function setupEvents()
+{
+	canvas.dragFlag = false;
+	canvas.addEventListener("mousemove", function(evt)
+	{
+		if(!canvas.dragFlag)
+		{
+			return;
+		}
+	
+		var x = evt.offsetX || evt.layerX;
+		var y = evt.offsetY || evt.layerY;
+
+		var Alpha = nCameraPosAlpha;
+		Alpha -= (pointY - y) / 2;
+		pointY = y;
+		if( ( 0 < Alpha ) && ( Alpha < 80 ) )
+		{
+			nCameraPosAlpha = Alpha;
+		}
+
+		var Beta = nCameraPosBeta;
+		Beta += (pointX - x) / 2;
+		pointX = x;
+		if( ( -120 < Beta ) && ( Beta < 120 ) )
+		{
+			nCameraPosBeta = Beta;
+		}
+		draw();
+		
+	}, false );
+
+	canvas.addEventListener("mousedown", function(evt)
+	{
+		pointX = evt.offsetX || evt.layerX;
+		pointY = evt.offsetY || evt.layerY;
+		canvas.dragFlag = true;
+	}, false );
+	
+	canvas.addEventListener("mouseup", function(evt)
+	{
+		canvas.dragFlag = false;
+	}, false );	 
+  
+	document.getElementById( "ZoomIn" ).addEventListener( "click", function()
+	{
+		if( nCameraPosZoom > 0.5 )
+		{
+			nCameraPosZoom  -= 0.2;
+		}
+		draw();
+	}, true );
+
+	document.getElementById( "ZoomOut" ).addEventListener( "click", function()
+	{
+		if( nCameraPosZoom < 30 )
+		{	
+			nCameraPosZoom  += 0.2;
+		}
+		draw();
+	}, true ); 
+  
+	// Animation
+	bAnimationFrag = 0;
+   	var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+								window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+    window.requestAnimationFrame = requestAnimationFrame;   
+	var cancelAnimationFrame = window.cancelAnimationFrame || window.mozcancelAnimationFrame ||
+							   window.webkitcancelAnimationFrame || window.mscancelAnimationFrame;
+    window.cancelAnimationFrame = cancelAnimationFrame;  
+  
+	document.getElementById( "StartAni" ).addEventListener( "click", function()
+	{
+		if( bAnimationFrag == 0 )
+		{
+			bAnimationFrag = 1;
+			(function animationloop()
+			{
+				updateObjectPos();
+  				draw();
+  				animationID = window.requestAnimationFrame(animationloop);
+			}());
+    	}
+		
+	}, true );
+
+	document.getElementById( "StepAni" ).addEventListener( "click", function()
+	{
+		window.cancelAnimationFrame(animationID);
+		bAnimationFrag = 0;
+		updateObjectPos();
+		draw();
+	}, true );	
+	  
+
+	document.getElementById( "StopAni" ).addEventListener( "click", function()
+	{
+		window.cancelAnimationFrame(animationID);
+		bAnimationFrag = 0;
+		draw();
+	}, true );	
+	  
+	document.getElementById( "ResetAni" ).addEventListener( "click", function()
+	{
+		window.cancelAnimationFrame(animationID); 
+		bAnimationFrag = 0; 
+		initializeParticlePos();
+		draw();
+	}, true );	
+
+}
+
+function WEI(dist, re)
+{
+  return (re/dist) - 1.0;
+}
+
+function WEI_GRAD(dist, re)
+{
+  return (re/dist) - 1.0;
+}      
+      
+function createParticleData()
+{
+	position        = new Array(ARRAY_SIZE * 3);
+	particleType    = new Array(ARRAY_SIZE);  
+	acceleration    = new Array(ARRAY_SIZE * 3);
+	velocity        = new Array(ARRAY_SIZE * 3);
+	numberDensity   = new Array(ARRAY_SIZE);  
+	pressure        = new Array(ARRAY_SIZE);
+	velocityAfterCollision = new Array(ARRAY_SIZE * 3);
+  	Density         = new Array(NUM_TYP);
+  	DensityInv      = new Array(NUM_TYP);
+	
+	initializeParticlePos();
+      
+ 	r               = PARTICLE_DISTANCE * 2.1;     // 影響半径
+	r2              = r * r;                       // 影響半径の二乗
+	lengthBucket    = r * (1.0 + COURANT);         // バケット一辺の長さ
+	lengthBucket2   = lengthBucket * lengthBucket; // バケット一辺の長さの二乗
+	lengthBucketInv = 1.0 / lengthBucket;          // バケット一辺の長さの逆数
+
+	numBucketX   = Math.floor( (MAX_X - MIN_X) * lengthBucketInv + 3 ); //解析領域内のx方向のバケット数
+	numBucketY   = Math.floor( (MAX_Y - MIN_Y) * lengthBucketInv + 3 ); //解析領域内のy方向のバケット数
+	numBucketZ   = Math.floor( (MAX_Z - MIN_Z) * lengthBucketInv + 3 ); //解析領域内のz方向のバケット数
+	numBucketXY  =  Math.floor( numBucketX ) *  Math.floor( numBucketY );                       //解析領域内のバケット数
+	NumberOfBuckets = Math.floor(numBucketX) * Math.floor(numBucketY) * Math.floor(numBucketZ);  //解析領域内のバケット数
+
+ 	bucketFirst  = new Array( Math.floor( NumberOfBuckets ) ); //バケットに格納された先頭の粒子番号
+	bucketLast   = new Array( Math.floor( NumberOfBuckets ) ); //バケットに格納された最後尾の粒子番号
+	NextParticle = new Array( NumberOfParticles ); //同じバケット内の次の粒子番号
+
+	var tn0  = 0.0;
+	var tlmd = 0.0;
+	for( var ix = -4; ix < 5; ix++ )
+	{
+		for( var iy = -4; iy < 5; iy++ )
+		{
+			for( var iz = -4; iz < 5; iz++ )
+			{
+				var x = PARTICLE_DISTANCE * ix;
+				var y = PARTICLE_DISTANCE * iy;
+				var z = PARTICLE_DISTANCE * iz;
+				var dist2 = x*x+y*y+z*z;
+				if(dist2 <= r2)
+				{
+					if(dist2==0.0) continue;
+					var dist = Math.sqrt(dist2);
+					tn0  += WEI(dist, r);
+					tlmd += dist2 * WEI(dist, r);
+				}
+			}
+		}
+	}    
+  
+	n0     = tn0;                                         //初期粒子数密度
+	Lambda = tlmd / tn0;                                  //ラプラシアンモデルの係数λ
+	A1     = 2.0 * KINEMATIC_VISCOSITY * 3 / n0 / Lambda; //粘性項の計算に用いる係数
+	A2     = SOUND * SOUND / n0;                          //圧力の計算に用いる係数
+	A3     = -3 / n0;                                     //圧力勾配項の計算に用いる係数
+
+	Density[FLUID]    = DENSITY_FLUID;
+	Density[WALL]     = DENSITY_WALL;
+	DensityInv[FLUID] = 1.0 / DENSITY_FLUID;
+	DensityInv[WALL]  = 1.0 / DENSITY_WALL;
+
+	rLimit  = PARTICLE_DISTANCE * LIMIT_DISTANCE;
+	rLimit2 = rLimit * rLimit;
+	COL     = 1 + RESTITUTION;
+	Time    = 0.0;  
+}
+
+function initializeParticlePos()
+{
+	var numX = Math.floor( ( 1.2 / PARTICLE_DISTANCE ) );
+	var numY = Math.floor( ( 1.4 / PARTICLE_DISTANCE ) );
+	var numZ = Math.floor( ( 0.6 / PARTICLE_DISTANCE ) );
+
+	MIN_X = 0.0;
+	MIN_Y = 0.0;
+	MIN_Z = 0.0;
+	MAX_X = numX * PARTICLE_DISTANCE;
+	MAX_Y = numY * PARTICLE_DISTANCE;
+	MAX_Z = numZ * PARTICLE_DISTANCE;
+  
+	var i = 0;
+	for( var x = 0; x < numX; ++x )
+	{
+		for( var y = 0; y < numY; ++y )	
+		{
+			for( var z = 0; z < numZ; ++z )	
+			{
+				var flagOfParticleGeneration = OFF;
+				var posX = PARTICLE_DISTANCE * x;
+				var posY = PARTICLE_DISTANCE * y;
+				var posZ = PARTICLE_DISTANCE * z;
+
+				if( ( y < WALL_THICKNESS ) || 
+					( ( x < WALL_THICKNESS ) || ( numX - WALL_THICKNESS <= x ) ||
+				      ( z < WALL_THICKNESS ) || ( numZ - WALL_THICKNESS <= z ) ) )
+				{  
+					/* 壁 */
+					particleType[i]=WALL;
+					flagOfParticleGeneration = ON;
+				}
+				else if( ( WALL_THICKNESS <= y ) && ( y < numY - WALL_THICKNESS - 20 ) &&
+				         ( WALL_THICKNESS <= x ) && ( x < WALL_THICKNESS + WATER_THICKNESS ) &&  
+				         ( WALL_THICKNESS <= z ) && ( z < numZ - WALL_THICKNESS ) )
+				{
+					/* 流体領域 */
+					particleType[i]=FLUID;
+					flagOfParticleGeneration = ON;
+				}
+				else
+				{  
+					/* 何もない領域 */
+					flagOfParticleGeneration = OFF;
+				}
+
+				if( flagOfParticleGeneration == ON )
+				{
+					position[i * 3    ] = posX; 
+					position[i * 3 + 1] = posY; 
+					position[i * 3 + 2] = posZ;
+					velocity[i * 3    ] = 0; 
+					velocity[i * 3 + 1] = 0; 
+					velocity[i * 3 + 2] = 0;
+								
+					++i;
+				}
+			}
+		}
+	}
+
+	NumberOfParticles = i; 
+}
+
+function CheckParticle( i )
+{
+	if(	position[i*3  ]>MAX_X || position[i*3  ]<MIN_X ||
+		  position[i*3+1]>MAX_Y || position[i*3+1]<MIN_Y ||
+		  position[i*3+2]>MAX_Z || position[i*3+2]<MIN_Z )
+	{
+		if( particleType[i] == FLUID )
+		{
+			particleType[i] = GHOST;
+			pressure[i] = velocity[i*3] = velocity[i*3+1] = velocity[i*3+2] = 0.0;
+		}
+	}
+}                  
+                   
+function makeBuckets()
+{
+	for( var i = 0; i < NumberOfBuckets; ++i )
+	{
+		bucketFirst[i] = -1;
+	}
+
+	for( var i = 0; i < NumberOfBuckets; ++i )
+	{
+		bucketLast[i] = -1;
+	}
+
+	for( var i = 0; i < NumberOfParticles; ++i )
+	{
+		NextParticle[i] = -1;
+	}
+
+	for( var i = 0; i < NumberOfParticles; ++i )
+	{
+		if( particleType[i] == GHOST ) continue;
+		var ix = Math.floor( ( position[i * 3    ] - MIN_X ) * lengthBucketInv ) + 1;
+		var iy = Math.floor( ( position[i * 3 + 1] - MIN_Y ) * lengthBucketInv ) + 1;
+		var iz = Math.floor( ( position[i * 3 + 2] - MIN_Z ) * lengthBucketInv ) + 1;
+		var ib = iz * numBucketXY + iy * numBucketX + ix;
+		
+		var j  = bucketLast[ib];
+		bucketLast[ib] = i;
+		if( j == -1 )
+		{
+			bucketFirst[ib] = i;
+		}
+		else
+		{
+			NextParticle[j] = i;
+		}
+	}
+}                   
+      
+function calculateViscosityTerm()
+{
+	for( var i = 0; i < NumberOfParticles; ++i )
+	{
+		if( particleType[i] != FLUID ) continue;
+
+		var Acc_x = 0.0;			
+		var Acc_y = 0.0;
+		var Acc_z = 0.0;
+		var pos_ix = position[i*3  ];	
+		var pos_iy = position[i*3+1];	
+		var pos_iz = position[i*3+2];
+		var vel_ix = velocity[i*3  ];	
+		var vel_iy = velocity[i*3+1];	
+		var vel_iz = velocity[i*3+2];
+		var ix = Math.floor( ( pos_ix - MIN_X ) * lengthBucketInv ) + 1;
+		var iy = Math.floor( ( pos_iy - MIN_Y ) * lengthBucketInv ) + 1;
+		var iz = Math.floor( ( pos_iz - MIN_Z ) * lengthBucketInv ) + 1;
+	
+		// 隣接するバケットにある粒子のみ考慮する。
+		for( var jz = iz - 1; jz <= iz + 1; ++jz )
+		{
+			for( var jy = iy - 1; jy <= iy + 1; ++jy )
+			{
+				for( var jx = ix - 1; jx <= ix + 1; ++jx )
+				{
+					var jb = jz * numBucketXY + jy * numBucketX + jx;
+					var j = bucketFirst[jb];
+					if( j == -1 ) continue;
+					for(;;)
+					{
+						var rX = position[j * 3    ] - pos_ix;
+						var rY = position[j * 3 + 1] - pos_iy;					
+						var rZ = position[j * 3 + 2] - pos_iz;
+						var dist2 = rX * rX + rY * rY + rZ * rZ;
+						if( dist2 < r2 )
+						{
+							if( j != i && particleType[j] != GHOST)
+							{
+								var dist = Math.sqrt(dist2);
+								var w = WEI(dist, r);
+								Acc_x += ( velocity[j * 3    ] - vel_ix ) * w;
+								Acc_y += ( velocity[j * 3 + 1] - vel_iy ) * w;
+								Acc_z += ( velocity[j * 3 + 2] - vel_iz ) * w;
+							}
+						}
+						j = NextParticle[j];
+						if( j == -1 ) break;
+					}
+				}
+			}
+		}
+
+		acceleration[i * 3    ] = Acc_x * A1 + G_X;
+		acceleration[i * 3 + 1] = Acc_y * A1 + G_Y;
+		acceleration[i * 3 + 2] = Acc_z * A1 + G_Z;
+	}
+} 
+ 
+function moveParticle()
+{
+	for( var i = 0; i < NumberOfParticles; ++i)
+	{
+		if( particleType[i] == FLUID )
+		{
+			velocity[i*3  ] += acceleration[i*3  ] * DELTA_T; 
+			velocity[i*3+1] += acceleration[i*3+1] * DELTA_T; 
+			velocity[i*3+2] += acceleration[i*3+2] * DELTA_T;
+			
+			position[i*3  ] += velocity[i*3  ] * DELTA_T; 
+			position[i*3+1] += velocity[i*3+1] * DELTA_T; 
+			position[i*3+2] += velocity[i*3+2] * DELTA_T;		
+
+			acceleration[i * 3    ] = 0;
+			acceleration[i * 3 + 1] = 0;
+			acceleration[i * 3 + 2] = 0;
+
+			CheckParticle(i);
+		}
+	}
+}
+
+function collision()
+{
+	for( var i = 0; i < NumberOfParticles; ++i )
+	{ 
+		velocityAfterCollision[i*3  ] = velocity[i*3  ];
+		velocityAfterCollision[i*3+1] = velocity[i*3+1]; 
+		velocityAfterCollision[i*3+2] = velocity[i*3+2]; 
+	}
+
+	for( var i = 0; i < NumberOfParticles; ++i )
+	{
+		if( particleType[i] != FLUID ) continue;
+		var mi = Density[ particleType[i] ];
+
+		var pos_ix  = position[i*3  ];	
+		var pos_iy  = position[i*3+1];	
+		var pos_iz  = position[i*3+2];
+		var vel_ix  = velocity[i*3  ];	
+		var vel_iy  = velocity[i*3+1];	
+		var vel_iz  = velocity[i*3+2];
+		var vel_ix2 = velocity[i*3  ];	
+		var vel_iy2 = velocity[i*3+1];	
+		var vel_iz2 = velocity[i*3+2];
+		var ix = Math.floor( ( pos_ix - MIN_X ) * lengthBucketInv ) + 1;
+		var iy = Math.floor( ( pos_iy - MIN_Y ) * lengthBucketInv ) + 1;
+		var iz = Math.floor( ( pos_iz - MIN_Z ) * lengthBucketInv ) + 1;
+	
+		for( var jz = iz - 1; jz <= iz + 1; ++jz )
+		{
+			for( var jy = iy - 1; jy <= iy + 1; ++jy )
+			{
+				for( var jx = ix - 1; jx <= ix + 1; ++jx )
+				{
+					var jb = jz * numBucketXY + jy * numBucketX + jx;
+					var j = bucketFirst[jb];
+					if( j == -1 ) continue;
+					for(;;)
+					{
+						var rX = position[j * 3    ] - pos_ix;
+						var rY = position[j * 3 + 1] - pos_iy;					
+						var rZ = position[j * 3 + 2] - pos_iz;
+						var dist2 = rX * rX + rY * rY + rZ * rZ;
+						if( dist2 < rLimit2 )
+						{
+							if( j != i && particleType[j] != GHOST)
+							{
+								var dist = Math.sqrt(dist2);
+								var forceDT = ( vel_ix - velocity[j*3  ] ) * rX +
+												( vel_iy - velocity[j*3+1] ) * rY +
+												( vel_iz - velocity[j*3+2] ) * rZ;
+
+								if(forceDT > 0.0)
+								{
+									var mj = Density[FLUID];
+									forceDT *= COL * mj / ( mi + mj ) / dist2;
+									vel_ix2 -= forceDT * rX; 
+									vel_iy2 -= forceDT * rY; 
+									vel_iz2 -= forceDT * rZ;
+								}							
+							}
+						}
+						j = NextParticle[j];
+						if( j == -1 ) break;
+					}
+				}
+			}
+		}
+		
+		velocityAfterCollision[i*3  ] = vel_ix2; 
+		velocityAfterCollision[i*3+1] = vel_iy2; 
+		velocityAfterCollision[i*3+2] = vel_iz2;
+	}
+
+	for( var i = 0; i < NumberOfParticles; ++i )
+	{
+		if(particleType[i] == FLUID)
+		{
+			velocity[i*3  ] = velocityAfterCollision[i*3  ]; 
+			velocity[i*3+1] = velocityAfterCollision[i*3+1]; 
+			velocity[i*3+2] = velocityAfterCollision[i*3+2];
+		}
+	}
+
+}    
+
+function calculatePressure()
+{
+	for( var i = 0; i < NumberOfParticles; ++i )
+	{
+		if( particleType[i] == GHOST ) continue;
+
+		var pos_ix  = position[i*3  ];	
+		var pos_iy  = position[i*3+1];	
+		var pos_iz  = position[i*3+2];
+		var ni = 0.0;
+		var ix = Math.floor( ( pos_ix - MIN_X ) * lengthBucketInv ) + 1;
+		var iy = Math.floor( ( pos_iy - MIN_Y ) * lengthBucketInv ) + 1;
+		var iz = Math.floor( ( pos_iz - MIN_Z ) * lengthBucketInv ) + 1;
+	
+		var numParticleInBucket = 0;
+		for( var jz = iz - 1; jz <= iz + 1; ++jz )
+		{
+			for( var jy = iy - 1; jy <= iy + 1; ++jy )
+			{
+				for( var jx = ix - 1; jx <= ix + 1; ++jx )
+				{
+					var jb = jz * numBucketXY + jy * numBucketX + jx;
+					var j = bucketFirst[jb];
+					if( j == -1 ) continue;
+					for(;;)
+					{
+						var rX = position[j * 3    ] - pos_ix;
+						var rY = position[j * 3 + 1] - pos_iy;					
+						var rZ = position[j * 3 + 2] - pos_iz;
+						var dist2 = rX * rX + rY * rY + rZ * rZ;
+						if( dist2 < r2 )
+						{
+							if( j != i && particleType[j] != GHOST )
+							{
+								var dist = Math.sqrt(dist2);
+								var w =  WEI(dist, r);
+								++numParticleInBucket;
+								ni += w;						
+							}
+						}
+						j = NextParticle[j];
+						if( j == -1 ) break;
+					}
+				}
+			}
+		}
+		
+		var mi = Density[ particleType[i] ];
+		var pressure_i = (ni > n0) * (ni - n0) * A2 * mi;
+		pressure[i] = pressure_i;		
+	}
+}
+    
+function calculatePressureGradient()
+{
+	for( var i = 0; i < NumberOfParticles; ++i )
+	{
+		if( particleType[i] != FLUID ) continue;
+		var Acc_x = 0.0;			
+		var Acc_y = 0.0;
+		var Acc_z = 0.0;
+		var pos_ix  = position[i*3  ];	
+		var pos_iy  = position[i*3+1];	
+		var pos_iz  = position[i*3+2];
+		var pre_min = pressure[i];
+		var ix = Math.floor( ( pos_ix - MIN_X ) * lengthBucketInv ) + 1;
+		var iy = Math.floor( ( pos_iy - MIN_Y ) * lengthBucketInv ) + 1;
+		var iz = Math.floor( ( pos_iz - MIN_Z ) * lengthBucketInv ) + 1;
+	
+		for( var jz = iz - 1; jz <= iz + 1; ++jz )
+		{
+			for( var jy = iy - 1; jy <= iy + 1; ++jy )
+			{
+				for( var jx = ix - 1; jx <= ix + 1; ++jx )
+				{
+					var jb = jz * numBucketXY + jy * numBucketX + jx;
+					var j = bucketFirst[jb];
+					if( j == -1 ) continue;
+					for(;;)
+					{
+						var rX = position[j * 3    ] - pos_ix;
+						var rY = position[j * 3 + 1] - pos_iy;					
+						var rZ = position[j * 3 + 2] - pos_iz;
+						var dist2 = rX * rX + rY * rY + rZ * rZ;
+						if( dist2 < r2 )
+						{
+							if( j != i && particleType[j] != GHOST)
+							{
+								if( pre_min > pressure[j] ) pre_min = pressure[j];					
+							}
+						}
+						j = NextParticle[j];
+						if( j == -1 ) break;
+					}
+				}
+			}
+		}
+		
+		for( var jz = iz - 1; jz <= iz + 1; ++jz )
+		{
+			for( var jy = iy - 1; jy <= iy + 1; ++jy )
+			{
+				for( var jx = ix - 1; jx <= ix + 1; ++jx )
+				{
+					var jb = jz * numBucketXY + jy * numBucketX + jx;
+					var j = bucketFirst[jb];
+					if( j == -1 ) continue;
+					for(;;)
+					{
+						var rX = position[j * 3    ] - pos_ix;
+						var rY = position[j * 3 + 1] - pos_iy;					
+						var rZ = position[j * 3 + 2] - pos_iz;
+						var dist2 = rX * rX + rY * rY + rZ * rZ;
+						if( dist2 < r2 )
+						{
+							if( j != i && particleType[j] != GHOST)
+							{
+								var dist = Math.sqrt(dist2);
+								var w = WEI_GRAD(dist, r);
+								
+								var test = pressure[j];
+								var test2 = pre_min;
+								
+								w *= (pressure[j] - pre_min) / dist2;
+								Acc_x += rX * w;	
+								Acc_y += rY * w;	
+								Acc_z += rZ * w;
+							}
+						}
+						j = NextParticle[j];
+						if( j == -1 ) break;
+					}
+				}
+			}
+		}
+		
+		acceleration[i*3  ] = Acc_x * DensityInv[FLUID] * A3;
+		acceleration[i*3+1] = Acc_y * DensityInv[FLUID] * A3;
+		acceleration[i*3+2] = Acc_z * DensityInv[FLUID] * A3;
+	}
+}    
+    
+function moveParticleUsingPressureGradient()
+{
+	var i;
+
+	for( i = 0; i < NumberOfParticles; i++ )
+	{
+		if(particleType[i] == FLUID)
+		{			
+			velocity[i*3  ] += acceleration[i*3  ]*DELTA_T;
+			velocity[i*3+1] += acceleration[i*3+1]*DELTA_T;
+			velocity[i*3+2] += acceleration[i*3+2]*DELTA_T;
+
+			position[i*3  ] += acceleration[i*3  ]*DELTA_T*DELTA_T;
+			position[i*3+1] += acceleration[i*3+1]*DELTA_T*DELTA_T;				
+			position[i*3+2] += acceleration[i*3+2]*DELTA_T*DELTA_T;								
+		}
+		
+		acceleration[i*3  ]=0.0;
+		acceleration[i*3+1]=0.0;
+		acceleration[i*3+2]=0.0;
+
+		CheckParticle(i);
+	}
+}    
+    
+function updateObjectPos()
+{		
+	makeBuckets();
+	calculateViscosityTerm();
+	moveParticle();
+	collision();
+	calculatePressure();
+	calculatePressureGradient();
+	moveParticleUsingPressureGradient();
+	Time += DELTA_T;
+}
+
+function draw()
+{ 
+	gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
+    gl.viewport( 0, 0, gl.viewportWidth, gl.viewportHeight );
+	gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+
+	gl.frontFace( gl.CCW );
+	gl.enable( gl.CULL_FACE );	
+	gl.cullFace( gl.BACK );
+	gl.enable( gl.DEPTH_TEST );
+	
+	// Light Position
+	var LightPos = [ nLightPosX, nLightPosY, nLightPosZ ];
+	gl.uniform3fv( shaderProgram.uniformLightPosition, LightPos );
+
+	// Projection Matrix
+	mat4.perspective( 60, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, projectionMatrix );
+    gl.uniformMatrix4fv( shaderProgram.uniformProjMatrix, false, projectionMatrix );
+    
+	// View Matrix
+	mat4.identity( modelViewMatrix );
+	var	nCameraPosZ = nCameraPosZoom * Math.cos( 3.141592 * nCameraPosBeta / 180) * Math.cos( 3.141592 * nCameraPosAlpha / 180);
+	var nCameraPosX = nCameraPosZoom * Math.sin( 3.141592 * nCameraPosBeta / 180) * Math.cos( 3.141592 * nCameraPosAlpha / 180);
+	var nCameraPosY = nCameraPosZoom * Math.sin( 3.141592 * nCameraPosAlpha / 180);
+	mat4.lookAt( [ nCameraPosX, nCameraPosY, nCameraPosZ ], [ 0, 0, 0 ], [ 0, 1, 0 ], modelViewMatrix );
+    gl.uniformMatrix4fv( shaderProgram.uniformMVMatrix, false, modelViewMatrix );
+    
+   	// Draw povars
+	for( var i = 0; i < NumberOfParticles; ++i )
+	{
+		var x = position[i*3] * 2 - 1.1;
+		var y = position[i*3+1] * 2 - 1.3;
+		var z = position[i*3+2] * 2 - 0.5;
+		mat4.identity( modelWorldMatrix );	
+		mat4.translate( modelWorldMatrix, [ x, y, z ], modelWorldMatrix );
+    	mat4.scale( modelWorldMatrix, [ 0.04, 0.04, 0.04 ], modelWorldMatrix );
+		mat4.inverse(modelWorldMatrix, normalMatrix);
+		mat4.transpose(normalMatrix, normalMatrix);
+		gl.uniformMatrix4fv( shaderProgram.uniformMWMatrix, false, modelWorldMatrix );
+		gl.uniformMatrix4fv( shaderProgram.uniformNormalMatrix, false, normalMatrix );
+		gl.disableVertexAttribArray( shaderProgram.vertexColorAttribute );
+		
+		if(particleType[i]==WALL)
+		{
+			gl.vertexAttrib4f( shaderProgram.vertexColorAttribute, 1.0, 0.0, 0.0, 1.0);
+			if( z > 0.5 )
+			{
+				continue;
+			}
+		}
+		else
+		{
+			gl.vertexAttrib4f( shaderProgram.vertexColorAttribute, 0.0, 0.0, 1.0, 1.0);
+		}
+		
+		gl.bindBuffer( gl.ARRAY_BUFFER, bufferVertexNormal );
+		gl.vertexAttribPointer( shaderProgram.vertexNormalAttribute, bufferVertexNormal.itemSize, gl.FLOAT, false, 0, 0 );
+		gl.bindBuffer( gl.ARRAY_BUFFER, bufferVertexPos );
+		gl.vertexAttribPointer( shaderProgram.vertexPositionAttribute, bufferVertexPos.itemSize, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, bufferVertexIndex );
+		gl.drawElements( gl.TRIANGLES, bufferVertexIndex.numberOfItems, gl.UNSIGNED_SHORT, 0 );    	
+	} 
+}
+
+function startup()
+{
+  	canvas = document.getElementById( "myGLCanvas" );
+  	gl = createGLContext( canvas );
+	
+	// Camera Position
+	nCameraPosZoom  = 3;
+	nCameraPosAlpha = 25;
+	nCameraPosBeta  = 10;
+	
+	// Light Position
+	nLightPosX = 2.0;
+	nLightPosY = 0.0;
+	nLightPosZ = 4.0;
+	
+	// Initialize
+	setupShaders(); 
+	createSphere();
+	setupEvents();
+    
+    // particle setting
+    createParticleData();
+    
+    draw();    
+}
+</script>
+
+
+<body onload="startup();">
+<div style="width : 500px; margin: 10px auto;" 
+	 style="display:flex; flex-direction: column; justify-content: center;">
+	<canvas id="myGLCanvas" width="500" height="500"></canvas>
+	<fieldset>
+  		<legend>Camera</legend>
+  		&emsp;Zoom : 
+  		<input type="button" id="ZoomIn"   value="Zoom In"  />
+  		<input type="button" id="ZoomOut"  value="Zoom Out" />
+	</fieldset>
+	<fieldset>
+  	<legend>Animation</legend>
+  		&emsp;Animation : 
+  		<input type="button" id="StartAni"    value="Start"  />
+  		<input type="button" id="StepAni"     value="Step"   /> 
+  		<input type="button" id="StopAni"     value="Stop"   />
+  		<input type="button" id="ResetAni"    value="Reset"  />
+	</fieldset>
+</div>
+</body>
+</html>
