@@ -13,7 +13,8 @@ let ConfigDefaultParam = function ()
         row.style.display = "flex"; 
         row.style.flexDirection = "row"; 
         row.style.alignItems = "center";
-        row.style.margin = "0px 0px 0px 0px";        
+        row.style.margin = "0px 0px 0px 0px";
+        row.style.flexShrink = "0";
         let label = document.createElement("div");
         label.textContent = name;
         label.style.width = "100px";
@@ -27,6 +28,7 @@ let ConfigDefaultParam = function ()
     this.selector.style.display = "flex"; 
     this.selector.style.flexDirection = "row"; 
     this.selector.style.alignItems = "center";
+    this.selector.style.flexShrink = "0";
     this.selector.style.margin = "10px 0px 10px 0px"; 
     this.iconList = {
         BarGraph : { type:"BarGraph", src: "image/addBarGraph.png" },
@@ -54,6 +56,7 @@ let ConfigDefaultParam = function ()
     addParam( "Type", this.selector, this.dom );
 
     this.barArea = document.createElement("div");
+    this.barArea.style.flexShrink = "0";
     this.barName = document.createElement("input");
     this.barName.style.padding = "8px 8px 8px 8px";
     this.barName.style.margin = "10px 0px 10px 0px";
@@ -75,6 +78,7 @@ let ConfigDefaultParam = function ()
     addParam( "Color", this.barColor.getDom(), this.barArea );
 
     this.arcArea = document.createElement("div");
+    this.arcArea.style.flexShrink = "0";
     this.arcName = document.createElement("input");
     this.arcName.style.padding = "8px 8px 8px 8px";
     this.arcName.style.margin = "10px 0px 10px 0px";
@@ -96,6 +100,7 @@ let ConfigDefaultParam = function ()
     addParam( "Color", this.arcColor.getDom(), this.arcArea );
 
     this.pointArea = document.createElement("div");
+    this.pointArea.style.flexShrink = "0";
     this.pointName = document.createElement("input");
     this.pointName.style.padding = "8px 8px 8px 8px";
     this.pointName.style.margin = "10px 0px 10px 0px";
@@ -114,6 +119,7 @@ let ConfigDefaultParam = function ()
     // addParam( "Icon", this.pointIcon.getDom(), this.pointArea );
 
     this.lineArea = document.createElement("div");
+    this.lineArea.style.flexShrink = "0";
     this.lineName = document.createElement("input");
     this.lineName.style.padding = "8px 8px 8px 8px";
     this.lineName.style.margin = "10px 0px 10px 0px";
@@ -133,6 +139,7 @@ let ConfigDefaultParam = function ()
     addParam( "Color", this.lineColor.getDom(), this.lineArea );    
 
     this.polygonArea = document.createElement("div");
+    this.polygonArea.style.flexShrink = "0";
     this.polygonName = document.createElement("input");
     this.polygonName.style.padding = "8px 8px 8px 8px";
     this.polygonName.style.margin = "10px 0px 10px 0px";

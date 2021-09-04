@@ -2,7 +2,8 @@
 let DataEditor = function()
 {
     this.dom = document.createElement("div");
-    this.dom.style.display = "flex"; 
+    this.dom.style.width = "100%";
+    this.dom.style.display = "flex";
     this.dom.style.flexDirection = "column"; 
     this.dom.style.overflowY = "scroll";
     this.dom.style.padding = "0px 10px 0px 0px"; 
@@ -15,7 +16,8 @@ let DataEditor = function()
         row.style.display = "flex"; 
         row.style.flexDirection = "row"; 
         row.style.alignItems = "center";
-        row.style.margin = "0px 0px 0px 0px";        
+        row.style.margin = "0px 0px 0px 0px";
+        row.style.flexShrink = "0";
         let label = document.createElement("div");
         label.textContent = name;
         label.style.width = "100px";

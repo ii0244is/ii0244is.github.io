@@ -38,8 +38,9 @@ DataList.prototype.addData = function( objName )
     row.style.justifyContent = "space-between";
     row.style.margin = "0px 0px 3px 10px";
     row.style.padding = "3px 3px 3px 3px";
+    row.style.flexShrink = "0";
     row.style.border = "1px solid #fff";
-    row.style.borderStyle = "none none solid none";      
+    row.style.borderStyle = "none none solid none";
 
     let label = document.createElement("div");
     label.textContent = g_dataList[ objName ];

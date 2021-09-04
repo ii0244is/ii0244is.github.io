@@ -43,7 +43,7 @@ let VertexMerge = function()
     this.cancelButton.style.padding = "5px 20px 5px 20px"
     this.cancelButton.style.margin = "10px 20px 10px 0px" 
     this.cancelButton.style.border = "1px solid #444";
-    this.cancelButton.style.borderStyle = "solid";      
+    this.cancelButton.style.borderStyle = "solid";
 
     let buttonArea = document.createElement("div");
     buttonArea.style.display = "flex"; 
