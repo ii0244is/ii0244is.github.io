@@ -123,7 +123,10 @@ class FisheyeLensCorrection {
         const prev = calcRayDirection(this.focalLength, this.mousePosX, this.mousePosY, w, h);
         const current = calcRayDirection(this.focalLength, x, y, w, h);
         this.horizontalAngle += current.h - prev.h;
-        this.verticalAngle += current.v - prev.v;
+        const v = this.verticalAngle + (current.v - prev.v);
+        if(0 < v && v < 90){
+          this.verticalAngle = v;
+        }
         this.draw();
       }
       this.mousePosX = x;
