@@ -1,0 +1,487 @@
+<html>
+
+<head>
+  <meta charset="utf-8"/>
+</head>
+
+<script type="text/javascript" src="js/FisheyeLensApp.js"></script>
+<script type="text/javascript" src="js/FisheyeLensCorrectionPanel.js"></script>
+<script type="text/javascript" src="js/ViewDirectionPanel.js"></script>
+<script type="text/javascript" src="js/TextureMappingPanel.js"></script>
+<script type="text/javascript" src="js/glUtil.js"></script>
+<script type="text/javascript" src="js/glMatrix.js"></script>
+<script type="text/javascript" src="js/math.js"></script>
+
+<script type="text/javascript">
+function app(){
+
+  //////////////////////////////////////////////////
+  // fisheye Lens Correction
+  //////////////////////////////////////////////////
+
+  const canvas = document.getElementById("gl-canvas");
+  const fisheye = new FisheyeLensApp()
+  fisheye.initialize(canvas)
+
+  //////////////////////////////////////////////////
+  // src input
+  //////////////////////////////////////////////////
+
+  let video = null;
+  document.getElementById("file-select").onclick = (e) => {
+    document.getElementById("src-input").click()
+  }
+  document.getElementById("src-input").onchange = (e) => {
+    if ( !e.target.files[0] ) return;
+    const file = e.target.files[0];
+    document.getElementById("file-name").textContent = file.name
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      if(file.type.match('image') !== null){
+        player.style.display = "none"
+        const img = new Image();
+        img.onload = () => {
+          fisheye.setSrcImage(img);
+        }
+        img.src = reader.result;
+      }else if(file.type.match('video') !== null){
+        player.style.display = "flex"
+        video = document.createElement('video');
+        video.addEventListener( 'loadeddata', () => {
+          console.log('loadeddata');
+          fisheye.setSrcVideo(video);
+          video.play();
+          pauseBuntton.style.display = "inline";
+          playBuntton.style.display = "none";
+        })
+        video.addEventListener( 'canplay', () => {
+          console.log('canplay');
+          fisheye.draw();
+        })
+        video.addEventListener('play', () => {
+          console.log('play')
+          if(seekBarTimerID === null){
+            seekBarTimerID = setInterval(drawSeekBar, 15)
+          }
+        })
+        video.addEventListener('pause', () => {
+          console.log('pause')
+          clearTimeout(seekBarTimerID);
+          seekBarTimerID = null;
+        })
+        video.addEventListener( 'ended', () => {
+          console.log('ended');
+          playBuntton.style.display = "inline";
+          pauseBuntton.style.display = "none";
+          clearTimeout(seekBarTimerID);
+          seekBarTimerID = null;
+        })
+        video.src = reader.result;
+      }
+    }
+  }
+
+  //////////////////////////////////////////////////
+  // param
+  //////////////////////////////////////////////////
+
+  const paramAreaLabel = document.getElementById("param-area-label")
+  const paramArea = document.getElementById("param-area-params")
+  paramAreaLabel.onclick = () => {
+    paramAreaLabel.style.transition = 'all 0.3s ease';
+    paramArea.style.transition = 'all 0.3s ease';
+    if(paramArea.style.height === '0px'){
+      paramArea.style.height = '80px'
+      paramAreaLabel.textContent = 'Hide settings'
+      paramAreaLabel.style.padding = '7px 0 2px 0'
+      paramAreaLabel.style.margin = '5px 0 0 0'
+      paramAreaLabel.style.borderStyle = 'solid none none none'
+    }else{
+      paramArea.style.height = '0px'
+      paramAreaLabel.textContent = 'Show settings'
+      paramAreaLabel.style.padding = '2px 0'
+      paramAreaLabel.style.margin = '0 0 0 0'
+      paramAreaLabel.style.borderStyle = 'none'
+    }
+  }
+  paramArea.style.height = '0px'
+
+  const fullscreen = document.getElementById("fullscreen")
+  fullscreen.onclick = () => {
+    fisheye.setScreenMode("full", 1000)
+    resetScreenIcon()
+    fullscreen.style.fill = "#09a"
+  }
+  const split2V = document.getElementById("2-split-v")
+  split2V.onclick = () => {
+    fisheye.setScreenMode("2split-v", 1000)
+    resetScreenIcon()
+    split2V.style.fill = "#09a"
+  }
+  const split2H = document.getElementById("2-split-h")
+  split2H.onclick = () => {
+    fisheye.setScreenMode("2split-h", 1000)
+    resetScreenIcon()
+    split2H.style.fill = "#09a"
+  }
+  const split3V = document.getElementById("3-split-v")
+  split3V.onclick = () => {
+    fisheye.setScreenMode("3split-v", 1000)
+    resetScreenIcon()
+    split3V.style.fill = "#09a"
+  }
+  const split3H = document.getElementById("3-split-h")
+  split3H.onclick = () => {
+    fisheye.setScreenMode("3split-h", 1000)
+    resetScreenIcon()
+    split3H.style.fill = "#09a"
+  }
+  const split4 = document.getElementById("4-split")
+  split4.onclick = () => {
+    fisheye.setScreenMode("4split", 1000)
+    resetScreenIcon()
+    split4.style.fill = "#09a"
+  }
+  const resetScreenIcon = () => {
+    fullscreen.style.fill = "white"
+    split3H.style.fill = "white"
+    split2H.style.fill = "white"
+    split3V.style.fill = "white"
+    split2V.style.fill = "white"
+    split4.style.fill = "white"
+  }
+  fisheye.setScreenMode("full", 0)
+  fullscreen.style.fill = "#09a"
+
+  const showGuide = document.getElementById("show-guide")
+  fisheye.showGuideView(showGuide.checked, 0)
+  showGuide.onchange = () => {
+    fisheye.showGuideView(showGuide.checked, 1000)
+  }
+
+  //////////////////////////////////////////////////
+  // video player
+  //////////////////////////////////////////////////
+
+  const player = document.getElementById("video-player")
+  const playBuntton = document.getElementById("play");
+  playBuntton.onclick = () => {
+    if(video){
+      video.play();
+      pauseBuntton.style.display = "inline";
+      playBuntton.style.display = "none";
+    }
+  }
+  const pauseBuntton = document.getElementById("pause");
+  pauseBuntton.onclick = () => {
+    if(video){
+      video.pause();
+      playBuntton.style.display = "inline";
+      pauseBuntton.style.display = "none";
+    }
+  }
+  const stopBuntton = document.getElementById("stop");
+  stopBuntton.onclick = () => {
+    if(video){
+      video.pause();
+      video.currentTime = 0;
+      playBuntton.style.display = "inline";
+      pauseBuntton.style.display = "none";
+    }
+  }
+  const seekBar = document.getElementById("seek-bar");
+  let seekBarTimerID = null
+  seekBar.width = 280;
+  seekBar.height = 5;
+  seekBar.onclick = (e) => {
+    if(video === null){
+      return;
+    }
+    const x = e.offsetX;
+    video.currentTime = x / seekBar.width * video.duration;
+    drawSeekBar();
+  }
+  drawSeekBar = () => {
+    if(video === null){
+      return;
+    }
+    const ctx = seekBar.getContext('2d');
+    const w = seekBar.width;
+    const h = seekBar.height
+    ctx.fillStyle = 'rgba(255, 255, 255, 1.0)'
+    ctx.fillRect(0, 0, w, h);
+    const d = video.duration;
+    const c = video.currentTime;
+    ctx.fillStyle = 'rgba(120, 120, 240, 1.0)'
+    ctx.fillRect(0, 0, Math.ceil(w*c/d), h);
+  }
+}
+</script>
+
+<style>
+  body{
+    margin: 0;
+  }
+
+  #main{
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  #gl-canvas{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+  }
+
+  #src-selector{
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  #file-name{
+    width: 280px;
+    padding: 10px 15px;
+    margin: 0 10px 0 0;
+    background-color: white;
+    border-radius: 5px;
+  }
+
+  #file-select{
+    color: white;
+    padding: 10px 15px;
+    background-color: #09a;
+    border-radius: 5px;
+  }
+
+  #file-select:hover{
+    cursor: pointer;
+    background-color: #0bc;
+  }
+
+  #src-input{
+    display: none;
+  }
+
+  #video-player{
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px;
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    border-radius: 5px;
+    background-color: #333;
+    opacity: 0.9;
+  }
+
+  .gg-play-r {
+    box-sizing: border-box;
+    position: relative;
+    display: block;
+    transform: scale(var(--ggs,1));
+    width: 22px;
+    height: 22px;
+    border: 2px solid;
+    border-radius: 4px;
+    margin: 0 10px 0 0;
+    color: white;
+  }
+  .gg-play-r::before {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    width: 0;
+    height: 10px;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 6px solid;
+    top: 4px;
+    left: 7px;
+  }
+  .gg-play-r:hover{
+    cursor: pointer;
+  }
+
+  .gg-pause-r {
+    box-sizing: border-box;
+    position: relative;
+    display: none;
+    transform: scale(var(--ggs,1));
+    width: 22px;
+    height: 22px;
+    border: 2px solid;
+    border-radius: 4px;
+    margin: 0 10px 0 0;
+    color: white;
+  }
+  .gg-pause-r::before {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    left: 6px;
+    top: 6px;
+    border-left: 2px solid;
+    border-right: 2px solid
+  }
+  .gg-pause-r:hover{
+    cursor: pointer;
+  }
+
+  .gg-stop-r {
+    box-sizing: border-box;
+    position: relative;
+    display: block;
+    transform: scale(var(--ggs,1));
+    width: 22px;
+    height: 22px;
+    border: 2px solid;
+    border-radius: 4px;
+    margin: 0 10px 0 0;
+    color: white;
+  }
+  .gg-stop-r::before {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    top: 6px;
+    left: 6px;
+    background: currentColor
+  }
+  .gg-stop-r:hover{
+    cursor: pointer;
+  }
+
+  #seek-bar{
+    width: 280px;
+    height: 5px;
+    margin: 0 10px 0 10px;
+  }
+  #seek-bar:hover{
+    cursor: pointer;
+  }
+
+  #param-area{
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: white;
+    padding: 5px 15px 5px 15px;
+    border-radius: 5px;
+    background-color: #333;
+    opacity: 0.7;
+  }
+
+  #param-area-label{
+    border: 1px solid #ccc;
+    border-style: none;
+    padding: 2px 0px;
+  }
+
+  #param-area-label:hover{
+    cursor: pointer;
+  }
+
+  #param-area-params{
+    height: 0;
+    overflow: hidden;
+  }
+
+  #param-area-row{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 40px;
+  }
+
+  .param-area-row-label{
+    width: 80px;
+  }
+
+  .screen-icon{
+    margin: 0 5px;
+    fill:white;
+  }
+  .screen-icon:hover{
+    cursor: pointer;
+  }
+</style>
+
+<body onload="app()">
+  <div id="main">
+    <canvas id="gl-canvas"></canvas>
+    <div id="src-selector">
+      <div id="file-name">画像または動画を選択してください</div>
+      <div id="file-select">選択</div>
+      <input id="src-input" type="file"/>
+    </div>
+    <div id="param-area">
+      <div id="param-area-params">
+        <div id="param-area-row">
+          <div class="param-area-row-label">
+            Screen
+          </div>
+          <svg id="fullscreen" class="screen-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 200 200">
+            <rect x="0" y="0" width="200" height="200" rx="20" ry="20"/>
+            <text x="100" y="125" font-size="70" stroke="black" fill="black" text-anchor="middle">FULL</text>
+          </svg>
+          <svg id="2-split-v" class="screen-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 200 200">
+            <rect x="0" y="0" width="90" height="200" rx="20" ry="20"/>
+            <rect x="110" y="0" width="90" height="200" rx="20" ry="20"/>
+          </svg>
+          <svg id="2-split-h" class="screen-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 200 200">
+            <rect x="0" y="0" width="200" height="90" rx="20" ry="20"/>
+            <rect x="0" y="110" width="200" height="90" rx="20" ry="20"/>
+          </svg>
+          <svg id="3-split-v" class="screen-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 200 200">
+            <rect x="0" y="0" width="90" height="200" rx="20" ry="20"/>
+            <rect x="110" y="0" width="90" height="90" rx="20" ry="20"/>
+            <rect x="110" y="110" width="90" height="90" rx="20" ry="20"/>
+          </svg>
+          <svg id="3-split-h" class="screen-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 200 200">
+            <rect x="0" y="0" width="200" height="90" rx="20" ry="20"/>
+            <rect x="0" y="110" width="90" height="90" rx="20" ry="20"/>
+            <rect x="110" y="110" width="90" height="90" rx="20" ry="20"/>
+          </svg>
+          <svg id="4-split" class="screen-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 200 200">
+            <rect x="0" y="0" width="90" height="90" rx="20" ry="20"/>
+            <rect x="0" y="110" width="90" height="90" rx="20" ry="20"/>
+            <rect x="110" y="0" width="90" height="90" rx="20" ry="20"/>
+            <rect x="110" y="110" width="90" height="90" rx="20" ry="20"/>
+          </svg>
+        </div>
+        <div id="param-area-row">
+          <div class="param-area-row-label">
+            Guide 
+          </div>
+          <input id="show-guide" type="checkbox"/>
+        </div>
+      </div>
+      <div id="param-area-label">Show settings</div>
+    </div>
+    <div id="video-player">
+      <i id="play" class="gg-play-r"></i>
+      <i id="pause" class="gg-pause-r"></i>
+      <i id="stop" class="gg-stop-r"></i>
+      <canvas id="seek-bar"></canvas>
+    </div>
+  </div>
+</body>
+
+</html>

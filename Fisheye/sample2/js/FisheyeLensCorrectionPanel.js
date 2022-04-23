@@ -1,9 +1,8 @@
 
-class FisheyeLensCorrection {
+class FisheyeLensCorrectionPanel {
 
   constructor() {
     // gl
-    this.glCanvas = null
     this.glContext = null
     this.glShader = null
     this.glBufferScreen = {
@@ -20,23 +19,11 @@ class FisheyeLensCorrection {
     // texture source
     this.srcType = ''
     this.videoSrc = null
-    this.videoTimerId = null
-
-    // camera
-    this.focalLength = 500;
-    this.horizontalAngle = 0;
-    this.verticalAngle = 45;
-
-    // mouse pos
-    this.mousePosX = 0;
-    this.mousePosY = 0;
-    this.isMouseDragging = false;
   }
 
-  initialize(canvas){
-    this.glCanvas = canvas
-    this.glContext = createGLContext(this.glCanvas);
-    const gl = this.glContext
+  initialize(glContext){
+    this.glContext = glContext
+    const gl = glContext
 
     const VERTEX_SHADER_SOURCE = `
     attribute vec3 aVertexPosition;
@@ -47,7 +34,9 @@ class FisheyeLensCorrection {
     const FLAGMENT_SHADER_SOURCE = `
     precision mediump float;
     uniform sampler2D uTexture;
+    uniform vec4 frameColor;
     uniform vec2 textureSize;
+    uniform vec2 screenOffset;
     uniform vec2 screenSize;
     uniform vec3 screenX;
     uniform vec3 screenY;
@@ -67,8 +56,15 @@ class FisheyeLensCorrection {
     void main(){
       float w = screenSize.x;
       float h = screenSize.y;
-      float x = (w - gl_FragCoord.x);
-      float y = (h - gl_FragCoord.y);
+      float x = (w - gl_FragCoord.x + screenOffset.x);
+      float y = (h - gl_FragCoord.y + screenOffset.y);
+      if(frameColor.w > 0.0){
+        if(x <= 2.0 || w-2.0 <= x || y <= 2.0 || h-2.0 <= y){
+          gl_FragColor = frameColor;
+          return;
+        }
+      }
+
       vec3 screenPos = (x-w/2.0) * screenX + (y-h/2.0) * screenY;
       vec3 ray = normalize(screenPos + centerPos);
       vec2 hv = xyz2hv(ray);
@@ -106,52 +102,9 @@ class FisheyeLensCorrection {
     this.glBufferScreen.count = vertexPos.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, this.glBufferScreen.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPos), gl.STATIC_DRAW);
-
-    window.addEventListener('resize', this.draw)
-
-    this.glCanvas.onmousedown = (e) => {
-      this.isMouseDragging = true;
-      this.mousePosX = e.offsetX;
-      this.mousePosY = e.offsetY;
-    }
-    this.glCanvas.onmousemove = (e) => {
-      const x = e.offsetX;
-      const y = e.offsetY;
-      if(this.isMouseDragging){
-        const w = this.glCanvas.width/2;
-        const h = this.glCanvas.height/2;
-        const prev = calcRayDirection(this.focalLength, this.mousePosX, this.mousePosY, w, h);
-        const current = calcRayDirection(this.focalLength, x, y, w, h);
-        this.horizontalAngle += current.h - prev.h;
-        const v = this.verticalAngle + (current.v - prev.v);
-        if(0 < v && v < 90){
-          this.verticalAngle = v;
-        }
-        this.draw();
-      }
-      this.mousePosX = x;
-      this.mousePosY = y;
-    }
-    this.glCanvas.onmouseup = (e) => {
-      this.isMouseDragging = false;
-    }
-    this.glCanvas.onmouseout = (e) => {
-      this.isMouseDragging = false;
-    }
-    this.glCanvas.onmousewheel = (e) => {
-      if(e.deltaY > 0){
-        this.focalLength *= 0.9;
-      }else{
-        this.focalLength *= 1.1;
-      }
-      this.draw();
-    }
-
-    this.draw();
   }
 
   finalize(){
-    window.removeEventListener('resize', this.draw)
     this.glContext.deleteTexture(this.srcTexture.buffer);
     this.glContext.deleteBuffer(this.glBufferScreen.buffer);
   }
@@ -161,17 +114,10 @@ class FisheyeLensCorrection {
       this.glContext.deleteTexture(this.srcTexture.buffer);
       this.srcTexture.buffer = null;
     }
-
-    if(this.videoTimerId){
-      clearTimeout(this.videoTimerId);
-      this.videoTimerId = null;
-    }
-
     this.srcType = 'image'
     this.srcTexture.buffer = createTexture(this.glContext, src);
     this.srcTexture.width = src.width
     this.srcTexture.height = src.height
-    this.draw();
   }
 
   setSrcVideo(src){
@@ -179,69 +125,22 @@ class FisheyeLensCorrection {
       this.glContext.deleteTexture(this.srcTexture.buffer);
       this.srcTexture.buffer = null;
     }
-
-    if(this.videoTimerId){
-      clearTimeout(this.videoTimerId);
-      this.videoTimerId = null;
-    }
-
     this.srcType = 'video'
     this.videoSrc = src
     this.srcTexture.buffer = createTexture(this.glContext, src);
-
-    this.videoSrc.addEventListener('play', () => {
-      // console.log('play')
-      if(this.videoTimerId === null){
-        this.videoTimerId = setInterval(() => { 
-          // console.log('draw')
-          this.draw();
-        }, 15)
-      }
-    })
-    this.videoSrc.addEventListener('ended', () => {
-      // console.log('eneded')
-      clearTimeout(this.videoTimerId);
-      this.videoTimerId = null;
-    })
-    this.videoSrc.addEventListener('pause', () => {
-      // console.log('pause')
-      clearTimeout(this.videoTimerId);
-      this.videoTimerId = null;
-    })
   }
 
-  setFocalLength(f){
-    this.focalLength = f;
-    this.draw();
-  }
-
-  setHorizontalAngle(h){
-    this.horizontalAngle = h;
-    this.draw();
-  }
-
-  setVerticalAngle(v){
-    this.verticalAngle = v;
-    this.draw();
-  }
-
-  draw = () => {
+  draw(x, y, width, height, focalLenth, horizontalAngle, verticalAngle, color){
     if (this.srcTexture === null) {
       return;
     }
-
     const gl = this.glContext;
 
-    const w = this.glCanvas.clientWidth
-    const h = this.glCanvas.clientHeight
-    this.glCanvas.width = w
-    this.glCanvas.height = h
-
-    const cameraDirection = hv2xyz(this.horizontalAngle,this.verticalAngle)
+    const cameraDirection = hv2xyz(horizontalAngle, verticalAngle)
     const cameraUp = {x:0, y:1, z:0}
     const screenX = normalize(cross(cameraDirection, cameraUp))
     const screenY = normalize(cross(screenX, cameraDirection))
-    const centerPos = multiply(this.focalLength, cameraDirection)
+    const centerPos = multiply(focalLenth, cameraDirection)
 
     if(this.srcType === 'video'){
       gl.bindTexture(gl.TEXTURE_2D, this.srcTexture.buffer);
@@ -252,14 +151,19 @@ class FisheyeLensCorrection {
     }
 
     gl.useProgram(this.glShader);
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.viewport(0, 0, w, h);
+    gl.viewport(x, y, width, height);
+
+    const uFrameColor = gl.getUniformLocation(this.glShader, "frameColor");
+    gl.uniform4fv(uFrameColor, color);
 
     const uTextureSize = gl.getUniformLocation(this.glShader, "textureSize");
     gl.uniform2fv(uTextureSize, [this.srcTexture.width, this.srcTexture.height]);
 
+    const uScreenOffset = gl.getUniformLocation(this.glShader, "screenOffset");
+    gl.uniform2fv(uScreenOffset, [x, y]);
+
     const uScreenSize = gl.getUniformLocation(this.glShader, "screenSize");
-    gl.uniform2fv(uScreenSize, [w, h]);
+    gl.uniform2fv(uScreenSize, [width, height]);
 
     const uScreenX = gl.getUniformLocation(this.glShader, "screenX");
     gl.uniform3fv(uScreenX, [screenX.x, screenX.y, screenX.z]);
