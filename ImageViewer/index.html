@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <title>Page Title</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+</head>
+
+<style>
+body {
+  margin: 0;
+}
+
+#main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#canvas {
+ width: 80%;
+ max-width: 800px;
+ border: solid;
+}
+</style>
+
+<script>
+const DST_IMAGE_SIZE = 500
+
+let g_canvas = null
+let g_srcImage = new Image()
+let g_sx = 0
+let g_sy = 0
+let g_scale = 1
+
+let g_isMouseDown = null
+let g_mousePosX = null
+let g_mousePosY = null
+let g_touches = []
+
+function init() {
+  g_canvas = document.getElementById('canvas')
+  g_canvas.width = DST_IMAGE_SIZE
+  g_canvas.height = DST_IMAGE_SIZE
+
+  g_canvas.addEventListener('mousedown', (e) => {
+    g_isMouseDown = true
+    g_mousePosX = e.offsetX
+    g_mousePosY = e.offsetY
+  })
+
+  g_canvas.addEventListener('mouseup', (e) => {
+    g_isMouseDown = false
+  })
+
+  g_canvas.addEventListener('mouseleave', (e) => {
+    g_isMouseDown = false
+  })
+
+  g_canvas.addEventListener('mousemove', (e) => {
+    const mousePosX = e.offsetX
+    const mousePosY = e.offsetY
+
+    if (g_isMouseDown) {
+      const mouseDiffX = g_mousePosX - mousePosX
+      const mouseDiffY = g_mousePosY - mousePosY
+      const canvasDiffX = mouseDiffX / g_canvas.clientWidth * DST_IMAGE_SIZE
+      const canvasDiffY = mouseDiffY / g_canvas.clientHeight * DST_IMAGE_SIZE
+      const imageDiffX = canvasDiffX / g_scale
+      const imageDiffY = canvasDiffY / g_scale
+      const newSx = g_sx + imageDiffX
+      const newSy = g_sy + imageDiffY
+      g_sx = Math.min(Math.max(newSx, 0), maxSx())
+      g_sy = Math.min(Math.max(newSy, 0), maxSy())
+      draw()
+    }
+
+    g_mousePosX = mousePosX
+    g_mousePosY = mousePosY
+  })
+
+  g_canvas.addEventListener('mousewheel', (e) => {
+    const prevScale = g_scale
+    const newScale = e.deltaY > 0 ? g_scale * 0.95 : g_scale * 1.05
+    g_scale = Math.max(newScale, minScale())
+
+    const focusX = g_mousePosX / g_canvas.clientWidth * DST_IMAGE_SIZE
+    const focusY = g_mousePosY / g_canvas.clientHeight * DST_IMAGE_SIZE
+    const newSx = g_sx + focusX * (1 / prevScale - 1 / g_scale)
+    const newSy = g_sy + focusY * (1 / prevScale - 1 / g_scale)
+    g_sx = Math.min(Math.max(newSx, 0), maxSx())
+    g_sy = Math.min(Math.max(newSy, 0), maxSy())
+
+    draw()
+  })
+
+  g_canvas.addEventListener('touchmove', (e) => {
+    // デフォルトの動作を封じて、画面がスクロールしないようにする
+    e.preventDefault()
+
+    // タッチの位置を計算する
+    const canvasRect = g_canvas.getClientRects()[0]
+    const touches = []
+    for (let i = 0; e.touches.length > i; ++i) {
+      touches.push({
+        x: e.touches[i].clientX - canvasRect.left,
+        y: e.touches[i].clientY - canvasRect.top,
+      })
+    }
+
+    // タッチ数が異なる場合はタッチの位置だけ記憶してリターン
+    if (g_touches.length !== touches.length) {
+      g_touches = touches
+      return
+    }
+
+    // 全てのタッチの平均位置を計算する
+    const prevTouchMeanPos = { x:0, y:0 }
+    const newTouchMeanPos = { x:0, y:0 }
+    for (let i = 0; g_touches.length > i; ++i) {
+      prevTouchMeanPos.x += g_touches[i].x
+      prevTouchMeanPos.y += g_touches[i].y
+      newTouchMeanPos.x += touches[i].x
+      newTouchMeanPos.y += touches[i].y
+    }
+    prevTouchMeanPos.x /= g_touches.length
+    prevTouchMeanPos.y /= g_touches.length
+    newTouchMeanPos.x /= g_touches.length
+    newTouchMeanPos.y /= g_touches.length
+
+    // 全てのタッチの平均位置が動いた距離を視点の移動量とする
+    const touchDiffX = prevTouchMeanPos.x - newTouchMeanPos.x
+    const touchDiffY = prevTouchMeanPos.y - newTouchMeanPos.y
+    const canvasDiffX = touchDiffX / g_canvas.clientWidth * DST_IMAGE_SIZE
+    const canvasDiffY = touchDiffY / g_canvas.clientHeight * DST_IMAGE_SIZE
+    const imageDiffX = canvasDiffX / g_scale
+    const imageDiffY = canvasDiffY / g_scale
+    let newSx = g_sx + imageDiffX
+    let newSy = g_sy + imageDiffY
+
+    // 2 点タッチ以上の場合、拡大縮小も行う
+    if (g_touches >= 2) {
+      // 全てのタッチのうち最も離れた２点の距離の変化を拡大率の変化量とする
+      let prevMaxDistance = 0
+      for (let i = 0; g_touches.length > i; ++i) {
+        for (let j = i+1; g_touches.length > j; ++j) {
+          const p1 = g_touches[i]
+          const p2 = g_touches[j]
+          prevMaxDistance = Math.max(prevMaxDistance, calcDistance(p1, p2))
+        }
+      }
+      let newMaxDistance = 0
+      for (let i = 0; touches.length > i; ++i) {
+        for (let j = i+1; touches.length > j; ++j) {
+          const p1 = touches[i]
+          const p2 = touches[j]
+          newMaxDistance = Math.max(newMaxDistance, calcDistance(p1, p2))
+        }
+      }
+      const prevScale = g_scale
+      const newScale = newMaxDistance / prevMaxDistance
+      g_scale = Math.max(newScale, minScale())
+
+      // スケールの変化に合わせて画像の位置更新
+      newSx += prevTouchMeanPos.x * (1 / prevScale - 1 / g_scale)
+      newSy += prevTouchMeanPos.y * (1 / prevScale - 1 / g_scale)
+    }
+
+    // 移動範囲を制限する
+    g_sx = Math.min(Math.max(newSx, 0), maxSx())
+    g_sy = Math.min(Math.max(newSy, 0), maxSy())
+
+    // タッチの位置を更新する
+    g_touches = touches
+    
+    draw()
+  })
+
+  g_canvas.addEventListener('touchend', (e) => {
+    g_touches = []
+  })
+
+  const srcImageInput = document.getElementById('srcImageInput')
+  srcImageInput.addEventListener('change', (e) => {
+    if (!e.target.files[0]) return
+    const reader = new FileReader()
+    reader.addEventListener('load', (e) => {
+      g_srcImage.src = reader.result
+    })
+    reader.readAsDataURL(e.target.files[0])
+  })
+
+  g_srcImage.addEventListener('load', (e) => {
+    g_scale = Math.max(g_scale, minScale())
+    g_sx = Math.min(Math.max(g_sx, 0), maxSx())
+    g_sy = Math.min(Math.max(g_sy, 0), maxSy())
+    draw()
+  })
+}
+
+function draw() {
+  const ctx = g_canvas.getContext('2d')
+  const sx = g_sx
+  const sy = g_sy
+  const sw = DST_IMAGE_SIZE / g_scale
+  const sh = DST_IMAGE_SIZE / g_scale
+  const dx = 0
+  const dy = 0
+  const dw = sw * g_scale
+  const dh = sh * g_scale
+  ctx.drawImage(g_srcImage, sx, sy, sw, sh, dx, dy, dw, dh)
+}
+
+function maxSx() {
+  return g_srcImage.width - DST_IMAGE_SIZE / g_scale
+}
+
+function maxSy() {
+  return g_srcImage.height - DST_IMAGE_SIZE / g_scale  
+}
+
+function minScale() {
+  return DST_IMAGE_SIZE / Math.min(g_srcImage.width, g_srcImage.height)
+}
+
+function calcDistance(p1, p2) {
+  const dx = p1.x - p2.x
+  const dy = p1.y - p2.y
+  return Math.sqrt(dx * dx + dy * dy)
+}
+</script>
+
+<body onload="init()">
+  <div id="main">
+    <input id="srcImageInput" type="file"></input>
+    <canvas id="canvas"></canvas>
+  </div>
+</body>
+</html>
