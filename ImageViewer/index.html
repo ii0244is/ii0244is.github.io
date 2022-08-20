@@ -3,7 +3,7 @@
 <head>
   <meta charset='utf-8'>
   <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-  <title>Page Title</title>
+  <title>Image Viewer</title>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
 </head>
 
@@ -140,7 +140,7 @@ function init() {
     let newSy = g_sy + imageDiffY
 
     // 2 点タッチ以上の場合、拡大縮小も行う
-    if (g_touches >= 2) {
+    if (g_touches.length >= 2) {
       // 全てのタッチのうち最も離れた２点の距離の変化を拡大率の変化量とする
       let prevMaxDistance = 0
       for (let i = 0; g_touches.length > i; ++i) {
@@ -159,12 +159,14 @@ function init() {
         }
       }
       const prevScale = g_scale
-      const newScale = newMaxDistance / prevMaxDistance
+      const newScale = g_scale * newMaxDistance / prevMaxDistance
       g_scale = Math.max(newScale, minScale())
 
       // スケールの変化に合わせて画像の位置更新
-      newSx += prevTouchMeanPos.x * (1 / prevScale - 1 / g_scale)
-      newSy += prevTouchMeanPos.y * (1 / prevScale - 1 / g_scale)
+      const focusX = prevTouchMeanPos.x / g_canvas.clientWidth * DST_IMAGE_SIZE
+      const focusY = prevTouchMeanPos.y / g_canvas.clientHeight * DST_IMAGE_SIZE
+      newSx += focusX * (1 / prevScale - 1 / g_scale)
+      newSy += focusY * (1 / prevScale - 1 / g_scale)
     }
 
     // 移動範囲を制限する
