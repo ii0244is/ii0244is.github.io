@@ -81,6 +81,8 @@ function init() {
   })
 
   g_canvas.addEventListener('mousewheel', (e) => {
+    e.preventDefault()
+
     const prevScale = g_scale
     const newScale = e.deltaY > 0 ? g_scale * 0.95 : g_scale * 1.05
     g_scale = Math.max(newScale, minScale())
@@ -203,6 +205,10 @@ function init() {
 
 function draw() {
   const ctx = g_canvas.getContext('2d')
+
+  ctx.fillColor = 'rgb(0, 0, 0)'
+  ctx.fillRect(0, 0, g_canvas.width, g_canvas.height)
+
   const sx = g_sx
   const sy = g_sy
   const sw = DST_IMAGE_SIZE / g_scale
