@@ -1,0 +1,153 @@
+<html>
+
+<style>
+#input-area {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  margin: 0 0 10px 0;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-segmentation"></script>
+
+<script>
+let video = null
+let kernelSize = 10
+let segmenter = null
+
+const init = async () => {
+  const segmenterConfig = {
+    runtime: 'mediapipe', 
+    solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation',
+    modelType: 'general'
+  }
+  const model = bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation;
+  segmenter = await bodySegmentation.createSegmenter(model, segmenterConfig);
+
+  const videoStartButton = document.getElementById('video-start-button')
+  videoStartButton.addEventListener('click', (e) => {
+    video = document.createElement('video')
+    video.addEventListener('loadeddata', () => {
+      video.play()
+      requestAnimationFrame(loop)
+    })
+    const media = navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    }).then((stream) => {
+      video.srcObject = stream;
+    });
+    videoStartButton.style.display = 'none'
+  })
+
+  const kernelSizeInput = document.getElementById('kernel-size-input')
+  kernelSizeInput.addEventListener('change', (e) => {
+    kernelSize = Number(e.target.value)
+    document.getElementById('kernel-size').textContent = kernelSize
+  })
+}
+
+const loop = async () => {
+  try {
+    const { imageData, segmentationData } = await getImageData(video)
+    drawImage( imageData, segmentationData )
+    requestAnimationFrame(loop)
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+const getImageData = async (video) => {
+  const bufferCanvas = document.createElement('canvas')
+  bufferCanvas.width = video.videoWidth
+  bufferCanvas.height = video.videoHeight
+
+  const ctx = bufferCanvas.getContext('2d')
+  ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
+  const imageData = ctx.getImageData(0, 0, video.videoWidth, video.videoHeight)
+
+  const segmentationResult = await segmenter.segmentPeople(video)
+  const segmentationData = await segmentationResult[0].mask.toImageData();
+
+  return { imageData, segmentationData }
+}
+
+const drawImage = async (imageData, segmentationData) => {
+  if (!(imageData && segmentationData)) {
+    return
+  }
+
+  const w = imageData.width
+  const h = imageData.height
+  const dstImageData = new ImageData(w, h)
+
+  for (let y = 0; y < h; ++y) {
+    for (let x = 0; x < w; ++x) {
+      const idx = (y * w + x) * 4
+      let r = imageData.data[idx]
+      let g = imageData.data[idx+1]
+      let b = imageData.data[idx+2]
+      let a = imageData.data[idx+3]
+
+      const segValue = segmentationData.data[idx+3]
+      if (segValue !== 255) {
+        const blurRate = (1 - segValue / 255)
+        const adjustedKernelSize = Math.floor(kernelSize * blurRate)
+        let n = 0
+        r = g = b = 0
+        const kernelHalfSize = Math.floor(adjustedKernelSize / 2) + 1
+        for (let ky = 0; ky <= adjustedKernelSize; ++ky) {
+          for (let kx = 0; kx <= adjustedKernelSize; ++kx) {
+            const refX = x + kx - kernelHalfSize;
+            const refY = y + ky - kernelHalfSize;
+            if (refX < 0 || w <= refX || refY < 0 || h <= refY ) {
+              continue;
+            }
+            const refIdx = (refY * w + refX) * 4
+            r += imageData.data[refIdx]
+            g += imageData.data[refIdx+1]
+            b += imageData.data[refIdx+2]
+            ++n
+          }
+        }
+        r = Math.floor(r/n)
+        g = Math.floor(g/n)
+        b = Math.floor(b/n)
+      }
+
+      dstImageData.data[idx] = r
+      dstImageData.data[idx+1] = g
+      dstImageData.data[idx+2] = b
+      dstImageData.data[idx+3] = a
+    }
+  }
+
+  const imgCanvas = document.getElementById('img-canvas')
+  imgCanvas.width = w
+  imgCanvas.height = h
+  const imgCtx = imgCanvas.getContext('2d')
+  imgCtx.putImageData(dstImageData, 0, 0)
+}
+</script>
+
+<body onload="init()">
+  <div id="main">
+    <div id="input-area">
+      <button id="video-start-button">Start</button>
+      <span>
+        <span>Kernel Size</span>
+        <input type="range" id="kernel-size-input" value="10" min="3" max="100"/>
+        <span id="kernel-size">10</span>
+      </span>
+    </div>
+    <canvas id="img-canvas"></canvas>
+  </div>
+</body>
+
+</html>

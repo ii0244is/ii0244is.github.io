@@ -1,0 +1,291 @@
+<html>
+
+<style>
+#input-area {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  margin: 0 0 10px 0;
+}
+
+#display-area {
+  position: relative;
+}
+
+#img-canvas {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+#gui-canvas {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+</style>
+
+<script>
+let kernelSize = 10
+let filterArea = { x:0, y:0, w:0, h:0 }
+let isMouseDown = false
+let mousePos = { x:-1, y:-1 }
+
+let glProgram = null
+let glScreenVertexBufferInfo = {
+  buffer: null,
+  size: 0,
+  count: 0,
+}
+let glTextureBufferInfo = {
+  buffer: null,
+  width: 0,
+  height: 0,
+}
+
+const init = () => {
+  const input = document.getElementById('img-input')
+  input.addEventListener('change', (e) => {
+    const file = e.target.files[0]
+    const reader = new FileReader()
+    reader.addEventListener('load', (e) => {
+      const data = reader.result
+      const img = new Image()
+      img.addEventListener('load', () => {
+        initImageData(img)
+        const imgCanvas = document.getElementById('img-canvas')
+        imgCanvas.width = img.width
+        imgCanvas.height = img.height
+        imgCanvas.style.width = img.width + 'px'
+        imgCanvas.style.height = img.height + 'px'
+        const guiCanvas = document.getElementById('gui-canvas')
+        guiCanvas.width = img.width
+        guiCanvas.height = img.height
+        guiCanvas.style.width = img.width + 'px'
+        guiCanvas.style.height = img.height + 'px'
+        drawImage()
+      })
+      img.src = data
+    })
+    reader.readAsDataURL(file)
+  })
+
+  const kernelSizeInput = document.getElementById('kernel-size-input')
+  kernelSizeInput.addEventListener('change', (e) => {
+    kernelSize = Number(e.target.value)
+  })
+
+  const guiCanvas = document.getElementById('gui-canvas')
+  guiCanvas.addEventListener('mousedown', (e) => {
+    isMouseDown = true
+    mousePos.x = e.offsetX
+    mousePos.y = e.offsetY
+  })
+  guiCanvas.addEventListener('mousemove', (e) => {
+    if (!isMouseDown) {
+      return
+    }
+    const x = mousePos.x
+    const y = mousePos.y
+    const w = e.offsetX - x
+    const h = e.offsetY - y
+    drawRectOnGuiCanvas(x, y, w, h)
+  })
+  guiCanvas.addEventListener('mouseup', (e) => {
+    isMouseDown = false
+    filterArea.x = mousePos.x
+    filterArea.y = mousePos.y
+    filterArea.w = e.offsetX - mousePos.x
+    filterArea.h = e.offsetY - mousePos.y
+    drawImage()
+  })
+
+  initWebGL()
+}
+
+const initWebGL = () => {
+  const imgCanvas = document.getElementById('img-canvas')
+  const gl = imgCanvas.getContext('webgl')
+
+  const VERTEX_SHADER_SOURCE = `
+    attribute vec3 aVertexPosition;
+    void main(){
+      gl_Position = vec4(aVertexPosition, 1.0);
+    }
+  `
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertexShader, VERTEX_SHADER_SOURCE);
+  gl.compileShader(vertexShader);
+  if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+    const errorMessage = "Error compiling shader => " + gl.getShaderInfoLog(vertexShader)
+    alert(errorMessage);
+    console.log(errorMessage)
+    gl.deleteShader(vertexShader);
+    return
+  }
+
+  const FLAGMENT_SHADER_SOURCE = `
+    precision mediump float;
+    uniform sampler2D uTexture;
+    uniform vec2 uImageSize;
+    uniform float uKernelSize;
+    uniform vec4 uFilterArea;
+
+    void main(){
+      float w = uImageSize.x;
+      float h = uImageSize.y;
+      float x = gl_FragCoord.x;
+      float y = (h - gl_FragCoord.y);
+      const float MAX_KERNEL_SIZE = 100.0;
+
+      float fx = uFilterArea.x;
+      float fy = uFilterArea.y;
+      float fw = uFilterArea.z;
+      float fh = uFilterArea.w;
+
+      if (fx < x && x < fx + fw && fy < y && y < fy + fh) {
+        float kernelHalfSize = floor(uKernelSize / 2.0) + 1.0;
+        vec3 color = vec3(0.0, 0.0, 0.0);
+        float n = 0.0;
+        for (float ky = 0.0; ky <= MAX_KERNEL_SIZE; ky += 1.0) {
+          if (ky > uKernelSize) {
+            break;
+          }
+          for (float kx = 0.0; kx <= MAX_KERNEL_SIZE; kx += 1.0) {
+            if (kx > uKernelSize) {
+              break;
+            }
+            float refX = x + kx - kernelHalfSize;
+            float refY = y + ky - kernelHalfSize;
+            color += texture2D(uTexture, vec2(refX/w, 1.0-refY/h)).xyz;
+            n += 1.0;
+          }
+        }
+        color /= n;
+        gl_FragColor = vec4(color, texture2D(uTexture, vec2(x/w, 1.0-y/h)).w);
+      } else {
+        gl_FragColor = texture2D(uTexture, vec2(x/w, 1.0-y/h));
+      }
+    }
+  `
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragmentShader, FLAGMENT_SHADER_SOURCE);
+  gl.compileShader(fragmentShader);
+  if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+    const errorMessage = "Error compiling shader => " + gl.getShaderInfoLog(fragmentShader)
+    alert(errorMessage);
+    console.log(errorMessage)
+    gl.deleteShader(fragmentShader);
+    return
+  }
+
+  glProgram = gl.createProgram();
+  gl.attachShader(glProgram, vertexShader);
+  gl.attachShader(glProgram, fragmentShader);
+  gl.linkProgram(glProgram);
+  if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+    alert("Failed to setup shaders");
+  }
+
+  const vertexPos = [
+    -1.0, -1.0, 0.0,
+    -1.0,  1.0, 0.0,
+     1.0, -1.0, 0.0,
+    -1.0,  1.0, 0.0,
+     1.0,  1.0, 0.0,
+     1.0, -1.0, 0.0,
+  ];
+  glScreenVertexBufferInfo.buffer = gl.createBuffer();
+  glScreenVertexBufferInfo.size = 3;
+  glScreenVertexBufferInfo.count = vertexPos.length / 3;
+  gl.bindBuffer(gl.ARRAY_BUFFER, glScreenVertexBufferInfo.buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPos), gl.STATIC_DRAW);
+}
+
+const initImageData = (image) => {
+  const imgCanvas = document.getElementById('img-canvas')
+  const gl = imgCanvas.getContext('webgl')
+
+  if (glTextureBufferInfo.buffer) {
+    gl.deleteTexture(glTextureBufferInfo.buffer);
+    glTextureBufferInfo.buffer = null;
+  }
+
+  glTextureBufferInfo.buffer = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, glTextureBufferInfo.buffer);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); 
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  glTextureBufferInfo.width = image.width
+  glTextureBufferInfo.height = image.height
+}
+
+const drawImage = () => {
+  if (!glTextureBufferInfo.buffer) {
+    return
+  }
+
+  const imgCanvas = document.getElementById('img-canvas')
+  const gl = imgCanvas.getContext('webgl')
+  const w = imgCanvas.width
+  const h = imgCanvas.height
+
+  gl.useProgram(glProgram);
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.viewport(0, 0, w, h);
+
+  const uImageSize = gl.getUniformLocation(glProgram, "uImageSize");
+  gl.uniform2fv(uImageSize, [w, h]);
+
+  const uKernelSize = gl.getUniformLocation(glProgram, "uKernelSize");
+  gl.uniform1f(uKernelSize, kernelSize);
+
+  const uFilterArea = gl.getUniformLocation(glProgram, "uFilterArea");
+  gl.uniform4fv(uFilterArea, [filterArea.x, filterArea.y, filterArea.w, filterArea.h]);
+
+  const uTexture = gl.getUniformLocation(glProgram, "uTexture")
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, glTextureBufferInfo.buffer);
+  gl.uniform1i(uTexture, 0);
+
+  const aPos = gl.getAttribLocation(glProgram, "aVertexPosition");
+  gl.enableVertexAttribArray(aPos);
+  gl.bindBuffer(gl.ARRAY_BUFFER, glScreenVertexBufferInfo.buffer);
+  gl.vertexAttribPointer(aPos, glScreenVertexBufferInfo.size, gl.FLOAT, false, 0, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, glScreenVertexBufferInfo.count);
+  gl.disableVertexAttribArray(aPos);
+
+  const guiCanvas = document.getElementById('gui-canvas')
+  const guiCtx = guiCanvas.getContext('2d')
+  guiCtx.clearRect(0, 0, guiCanvas.width, guiCanvas.height)
+}
+
+const drawRectOnGuiCanvas = (x, y, w, h) => {
+  const guiCanvas = document.getElementById('gui-canvas')
+  const ctx = guiCanvas.getContext('2d')
+  ctx.clearRect(0, 0, guiCanvas.width, guiCanvas.height)
+  ctx.strokeRect(x,y,w,h)
+}
+</script>
+
+<body onload="init()">
+  <div id="main">
+    <div id="input-area">
+      <input type="file" id="img-input"/>
+      <span>
+        <span>Kernel Size</span>
+        <input type="number" id="kernel-size-input" value="10"/>
+      </span>
+    </div>
+    <div id="display-area">
+      <canvas id="img-canvas"></canvas>
+      <canvas id="gui-canvas"></canvas>
+    </div>
+  </div>
+</body>
+
+</html>

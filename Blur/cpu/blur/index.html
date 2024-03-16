@@ -1,0 +1,191 @@
+<html>
+
+<style>
+#input-area {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  margin: 0 0 10px 0;
+}
+
+#display-area {
+  position: relative;
+}
+
+#img-canvas {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+#gui-canvas {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+</style>
+
+<script>
+let srcImageData = null
+let kernelSize = 10
+let filterArea = { x:0, y:0, w:0, h:0 }
+let isMouseDown = false
+let mousePos = { x:-1, y:-1 }
+
+const init = () => {
+  const input = document.getElementById('img-input')
+  input.addEventListener('change', (e) => {
+    const file = e.target.files[0]
+    const reader = new FileReader()
+    reader.addEventListener('load', (e) => {
+      const data = reader.result
+      const img = new Image()
+      img.addEventListener('load', () => {
+        initImageData(img)
+        const imgCanvas = document.getElementById('img-canvas')
+        imgCanvas.width = img.width
+        imgCanvas.height = img.height
+        imgCanvas.style.width = img.width + 'px'
+        imgCanvas.style.height = img.height + 'px'
+        const guiCanvas = document.getElementById('gui-canvas')
+        guiCanvas.width = img.width
+        guiCanvas.height = img.height
+        guiCanvas.style.width = img.width + 'px'
+        guiCanvas.style.height = img.height + 'px'
+        drawImage()
+      })
+      img.src = data
+    })
+    reader.readAsDataURL(file)
+  })
+
+  const kernelSizeInput = document.getElementById('kernel-size-input')
+  kernelSizeInput.addEventListener('change', (e) => {
+    kernelSize = Number(e.target.value)
+  })
+
+  const guiCanvas = document.getElementById('gui-canvas')
+  guiCanvas.addEventListener('mousedown', (e) => {
+    isMouseDown = true
+    mousePos.x = e.offsetX
+    mousePos.y = e.offsetY
+  })
+  guiCanvas.addEventListener('mousemove', (e) => {
+    if (!isMouseDown) {
+      return
+    }
+    const x = mousePos.x
+    const y = mousePos.y
+    const w = e.offsetX - x
+    const h = e.offsetY - y
+    drawRectOnGuiCanvas(x, y, w, h)
+  })
+  guiCanvas.addEventListener('mouseup', (e) => {
+    isMouseDown = false
+    filterArea.x = mousePos.x
+    filterArea.y = mousePos.y
+    filterArea.w = e.offsetX - mousePos.x
+    filterArea.h = e.offsetY - mousePos.y
+    drawImage()
+  })
+}
+
+const initImageData = (image) => {
+  const bufferCanvas = document.createElement('canvas')
+  bufferCanvas.width = image.width
+  bufferCanvas.height = image.height
+  const ctx = bufferCanvas.getContext('2d')
+  ctx.drawImage(image, 0, 0, image.width, image.height)
+  srcImageData = ctx.getImageData(0, 0, image.width, image.height)
+}
+
+const drawImage = () => {
+  if (!srcImageData) {
+    return
+  }
+
+  const startTime = performance.now()
+
+  const w = srcImageData.width
+  const h = srcImageData.height
+  const dstImageData = new ImageData(w, h)
+
+  for (let y = 0; y < h; ++y) {
+    for (let x = 0; x < w; ++x) {
+      const idx = (y * w + x) * 4
+      let r = srcImageData.data[idx]
+      let g = srcImageData.data[idx+1]
+      let b = srcImageData.data[idx+2]
+      let a = srcImageData.data[idx+3]
+
+      if (
+        filterArea.x < x && x < filterArea.x + filterArea.w &&
+        filterArea.y < y && y < filterArea.y + filterArea.h
+      ) {
+        let n = 0
+        r = g = b = 0
+        const kernelHalfSize = Math.floor(kernelSize / 2) + 1
+        for (let ky = 0; ky <= kernelSize; ++ky) {
+          for (let kx = 0; kx <= kernelSize; ++kx) {
+            const refX = x + kx - kernelHalfSize;
+            const refY = y + ky - kernelHalfSize;
+            if (refX < 0 || w <= refX || refY < 0 || h <= refY ) {
+              continue;
+            }
+            const refIdx = (refY * w + refX) * 4
+            r += srcImageData.data[refIdx]
+            g += srcImageData.data[refIdx+1]
+            b += srcImageData.data[refIdx+2]
+            ++n
+          }
+        }
+        r = Math.floor(r/n)
+        g = Math.floor(g/n)
+        b = Math.floor(b/n)
+      }
+
+      dstImageData.data[idx] = r
+      dstImageData.data[idx+1] = g
+      dstImageData.data[idx+2] = b
+      dstImageData.data[idx+3] = a
+    }
+  }
+
+  const endTime = performance.now()
+  console.log('Time : ' + (endTime - startTime) + ' [ms]')
+
+  const imgCanvas = document.getElementById('img-canvas')
+  const imgCtx = imgCanvas.getContext('2d')
+  imgCtx.putImageData(dstImageData, 0, 0)
+
+  const guiCanvas = document.getElementById('gui-canvas')
+  const guiCtx = guiCanvas.getContext('2d')
+  guiCtx.clearRect(0, 0, guiCanvas.width, guiCanvas.height)
+}
+
+const drawRectOnGuiCanvas = (x, y, w, h) => {
+  const guiCanvas = document.getElementById('gui-canvas')
+  const ctx = guiCanvas.getContext('2d')
+  ctx.clearRect(0, 0, guiCanvas.width, guiCanvas.height)
+  ctx.strokeRect(x,y,w,h)
+}
+</script>
+
+<body onload="init()">
+  <div id="main">
+    <div id="input-area">
+      <input type="file" id="img-input"/>
+      <span>
+        <span>Kernel Size</span>
+        <input type="number" id="kernel-size-input" value="10"/>
+      </span>
+    </div>
+    <div id="display-area">
+      <canvas id="img-canvas"></canvas>
+      <canvas id="gui-canvas"></canvas>
+    </div>
+  </div>
+</body>
+
+</html>
