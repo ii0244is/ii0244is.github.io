@@ -1,0 +1,160 @@
+<html>
+
+<style>
+#main {
+  width: 100%;
+  height: 100%;
+}
+
+#input-area {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  margin: 0 0 10px 0;
+}
+
+#img-canvas {
+  width: 90%;
+  height: 90%;
+}
+</style>
+
+<script>
+let srcImageData = null
+let posX = 0
+let posY = 0
+let size = 8
+let textType = 'coord'
+
+const init = () => {
+  const imgCanvas = document.getElementById('img-canvas')
+  const canvasWidth = Math.min(imgCanvas.clientWidth, imgCanvas.clientHeight)
+  imgCanvas.width = canvasWidth
+  imgCanvas.height = canvasWidth
+  imgCanvas.style.width = canvasWidth + 'px'
+  imgCanvas.style.height = canvasWidth + 'px'
+
+  const input = document.getElementById('img-input')
+  input.addEventListener('change', (e) => {
+    const file = e.target.files[0]
+    const reader = new FileReader()
+    reader.addEventListener('load', (e) => {
+      const data = reader.result
+      const img = new Image()
+      img.addEventListener('load', () => {
+        initImageData(img)
+        drawImage()
+      })
+      img.src = data
+    })
+    reader.readAsDataURL(file)
+  })
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') {
+      posX = posX + 1
+      drawImage()
+    } else if (e.key === 'ArrowLeft') {
+      posX = Math.max(posX - 1, 0)
+      drawImage()
+    } else if (e.key === 'ArrowDown') {
+      posY = posY + 1
+      drawImage()
+    } else if (e.key === 'ArrowUp') {
+      posY = Math.max(posY - 1, 0)
+      drawImage()
+    } else if (e.key ==='i') {
+      size = Math.max(size - 1, 0)
+      drawImage()
+    } else if (e.key ==='o') {
+      size = Math.max(size + 1, 0)
+      drawImage()
+    } else if (e.key ==='c') {
+      if (textType === 'coord') {
+        textType = 'value'
+        document.getElementById('mode').textContent = 'Mode : value'
+      } else if (textType === 'value') {
+        textType = ''
+        document.getElementById('mode').textContent = 'Mode : -'
+      } else {
+        textType = 'coord'
+        document.getElementById('mode').textContent = 'Mode : coordinate'
+      }
+      drawImage()
+    }
+  })
+}
+
+const initImageData = (image) => {
+  const bufferCanvas = document.createElement('canvas')
+  bufferCanvas.width = image.width
+  bufferCanvas.height = image.height
+  const ctx = bufferCanvas.getContext('2d')
+  ctx.drawImage(image, 0, 0, image.width, image.height)
+  srcImageData = ctx.getImageData(0, 0, image.width, image.height)
+}
+
+const drawImage = () => {
+  const imgCanvas = document.getElementById('img-canvas')
+  const ctx = imgCanvas.getContext('2d')
+  const imgWidth = srcImageData.width 
+  const imgHeight = srcImageData.height
+
+  for (let y = 0; size > y; ++y) {
+    for (let x = 0; size > x; ++x) {
+      const sx = x + posX
+      const sy = y + posY
+
+      const cw = imgCanvas.width / size
+      const ch = cw
+      const cx = cw * x
+      const cy = ch * y
+
+      if (sx < 0 || imgWidth <= sx || sy < 0 || imgHeight <= sy) {
+        ctx.fillStyle = `rgb(0, 0, 0, 1.0)`
+        ctx.fillRect(cx, cy, cw, ch)
+        continue
+      }
+
+      const idx = (sy * imgWidth + sx) * 4
+      const r = srcImageData.data[idx]
+      const g = srcImageData.data[idx+1]
+      const b = srcImageData.data[idx+2]
+      ctx.fillStyle = `rgb(${r}, ${g}, ${b}, 1.0)`
+      ctx.fillRect(cx, cy, cw, ch)
+
+      if (textType === 'coord' || textType === 'value') {
+        const fontSize = cw / 5
+        ctx.font = `bold ${fontSize}px serif`;
+        const text = textType === 'coord' ? `(${sy}, ${sx})` : ` ${Math.floor((r+g+b)/3)} `
+        const textWidth = ctx.measureText(text).width
+        ctx.fillStyle = 'rgb(255, 255, 255, 0.5)'
+        ctx.fillRect(cx + (cw-textWidth*1.2)/2, cy + (ch-fontSize*1.2)/2, textWidth*1.2, fontSize*1.2)
+
+        ctx.fillStyle = 'rgb(0, 0, 0, 1.0)'
+        ctx.textBaseline = 'middle'
+        ctx.textAlign = 'center'
+        ctx.fillText(text, cx + cw/2, cy + ch/2)
+      }
+    }
+  }
+}
+
+</script>
+
+<body onload="init()">
+  <div id="main">
+    <div id="input-area">
+      <input type="file" id="img-input"/>
+      <div>↑↓→←:move</div>
+      <div>i:zoom in</div>
+      <div>o:zoom out</div>
+      <div>c:change mode</div>
+    </div>
+    <div id="mode">Mode:coordinate</div>
+    <canvas id="img-canvas"></canvas>
+  </div>
+</body>
+
+</html>
