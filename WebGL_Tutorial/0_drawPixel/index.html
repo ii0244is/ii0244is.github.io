@@ -1,0 +1,88 @@
+<html>
+
+<style>
+body {
+  margin: 20px 0;
+  width: 100%;
+  text-align: center
+}
+
+#canvas {
+  width: 500px;
+  border: 1px solid #000;
+  background-color: #000;
+}
+
+#link {
+  margin-top: 10px;
+  width: 500px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: right;
+}
+</style>
+
+<script>
+const WIDTH = 500
+const HEIGHT = 500
+
+function init () {
+  const canvas = document.getElementById('canvas')
+  canvas.width = WIDTH
+  canvas.height = HEIGHT
+  render()
+}
+
+function render () {
+  const imageData = new ImageData(WIDTH, HEIGHT)
+
+  drawCircle(imageData, {x:150, y:150}, 5, {r:255, g:0, b:0})
+  drawCircle(imageData, {x:350, y:150}, 5, {r:255, g:0, b:0})
+  drawCircle(imageData, {x:150, y:350}, 5, {r:255, g:0, b:0})
+  drawCircle(imageData, {x:350, y:350}, 5, {r:255, g:0, b:0})
+
+  const canvas = document.getElementById('canvas')
+  const ctx = canvas.getContext('2d')
+  ctx.putImageData(imageData, 0, 0)
+}
+
+function drawCircle (imageData, pos, radius, color) {
+  for (let y = -radius; radius > y; ++y) {
+    for (let x = -radius; radius > x; ++x) {
+      if (x*x + y*y < radius*radius) {
+        const p = {
+          x: Math.round(pos.x) + x,
+          y: Math.round(pos.y) + y,
+        }
+        drawPixel(imageData, p, color)
+      }
+    }
+  }
+}
+
+function drawPixel (imageData, pos, color) {
+  const w = imageData.width
+  const h = imageData.height
+
+  if (pos.x < 0 || w <= pos.x || pos.y < 0 || h < pos.y) {
+    return
+  }
+
+  const idx = (w * pos.y + pos.x) * 4
+  imageData.data[idx] = color.r
+  imageData.data[idx+1] = color.g
+  imageData.data[idx+2] = color.b
+  imageData.data[idx+3] = 255
+}
+
+</script>
+
+<body onload="init()">
+  <canvas id="canvas"></canvas>
+  <div id="link">
+    <a href="../1_convertVertexCoordinates/">Next</a>
+  </div>
+</body>
+
+</html>

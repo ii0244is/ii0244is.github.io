@@ -1,0 +1,122 @@
+<html>
+
+<style>
+body {
+  margin: 20px 0;
+  width: 100%;
+  text-align: center
+}
+
+#canvas {
+  border: 1px solid #000;
+  background-color: #000;
+}
+
+#link {
+  margin-top: 10px;
+  width: 500px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+</style>
+
+<script src="math.js"></script>
+<script src="render.js"></script>
+
+<script>
+
+// Screen
+const SCREEN_WIDTH = 500
+const SCREEN_HEIGHT = 500
+
+// View
+const CENTER = new Vec3(0, 0, 0)
+const UP = new Vec3(0, 1, 0)
+const FOVY = toRad(60)
+const NEAR = 0.1
+const FAR = 20
+let eyePosR = 4
+let eyePosTheta = toRad(45)
+let eyePosPhi = toRad(0)
+
+// Polygons
+const POLYGONS = [
+  new Polygon( 
+    new Vec3( 1, 0,  1),
+    new Vec3( 1, 0, -1),
+    new Vec3(-1, 0,  1),
+  ),
+  new Polygon( 
+    new Vec3(-1, 0,  1),
+    new Vec3( 1, 0, -1),
+    new Vec3(-1, 0, -1),
+  ),
+]
+
+// Mouse operation
+let isMouseDrag = false
+let mousePosX = 0
+let mousePosY = 0
+
+function init () {
+  const canvas = document.getElementById('canvas')
+  canvas.width = SCREEN_WIDTH
+  canvas.height = SCREEN_HEIGHT
+
+  canvas.addEventListener('mousedown', (e) => {
+    isMouseDrag = true
+    mousePosX = e.offsetX
+    mousePosY = e.offsetY
+  })
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (isMouseDrag) {
+      const newMousePosX = e.offsetX
+      const newMousePosY = e.offsetY
+      eyePosPhi = eyePosPhi + (newMousePosX - mousePosX) * 0.01
+      const newEyePosTheta = eyePosTheta - (newMousePosY - mousePosY) * 0.01
+      eyePosTheta = Math.max(Math.min(newEyePosTheta, Math.PI / 2), 0.01)
+      mousePosX = newMousePosX
+      mousePosY = newMousePosY
+      draw()
+    }
+  })
+
+  canvas.addEventListener('mouseup', (e) => {
+    isMouseDrag = false
+  })
+
+  draw()
+}
+
+function draw () {
+  const eye = {
+    x: eyePosR * Math.sin(eyePosTheta) * Math.cos(eyePosPhi),
+    y: eyePosR * Math.cos(eyePosTheta),
+    z: eyePosR * Math.sin(eyePosTheta) * Math.sin(eyePosPhi),
+  }
+
+  const imageData = render({
+    polygons: POLYGONS,
+    view: { eye, center:CENTER, up:UP, fovy:FOVY, near:NEAR, far:FAR },
+    screen: { width:SCREEN_WIDTH, height:SCREEN_HEIGHT },
+  })
+
+  const canvas = document.getElementById('canvas')
+  const ctx = canvas.getContext('2d')
+  ctx.putImageData(imageData, 0, 0)
+}
+
+</script>
+
+<body onload="init()">
+  <canvas id="canvas"></canvas>
+  <div id="link">
+    <a href="../1_convertVertexCoordinates/">Back</a>
+    <a href="../3_shading/">Next</a>
+  </div>
+</body>
+
+</html>

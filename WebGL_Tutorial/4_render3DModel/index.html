@@ -1,0 +1,162 @@
+<html>
+
+<style>
+body {
+  margin: 20px 0;
+  width: 100%;
+  text-align: center
+}
+
+#canvas {
+  margin-top: 20px;
+  border: 1px solid #000;
+  background-color: #000;
+}
+
+#link {
+  margin-top: 10px;
+  width: 500px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+</style>
+
+<script src="math.js"></script>
+<script src="render.js"></script>
+<script src="objLoader.js"></script>
+
+<script>
+
+// Screen
+const SCREEN_WIDTH = 500
+const SCREEN_HEIGHT = 500
+
+// View
+const UP = new Vec3(0, 1, 0)
+const FOVY = toRad(60)
+let far = 0.1
+let near = 20
+let eyePosR = 4
+let eyePosTheta = toRad(45)
+let eyePosPhi = toRad(0)
+let center = new Vec3(0, 0, 0)
+
+// Polygons
+let polygons = []
+
+// Mouse operation
+let isMouseDrag = false
+let mousePosX = 0
+let mousePosY = 0
+
+function init () {
+  const canvas = document.getElementById('canvas')
+  canvas.width = SCREEN_WIDTH
+  canvas.height = SCREEN_HEIGHT
+
+  canvas.addEventListener('mousedown', (e) => {
+    isMouseDrag = true
+    mousePosX = e.offsetX
+    mousePosY = e.offsetY
+  })
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (isMouseDrag) {
+      const newMousePosX = e.offsetX
+      const newMousePosY = e.offsetY
+      eyePosPhi = eyePosPhi + (newMousePosX - mousePosX) * 0.01
+      const newEyePosTheta = eyePosTheta - (newMousePosY - mousePosY) * 0.01
+      eyePosTheta = Math.max(Math.min(newEyePosTheta, Math.PI), 0.01)
+      mousePosX = newMousePosX
+      mousePosY = newMousePosY
+    }
+  })
+
+  canvas.addEventListener('mouseup', (e) => {
+    isMouseDrag = false
+  })
+
+  canvas.addEventListener('keydown', (e) => {
+    if (e.key === 'o') {
+      eyePosR *= 1.05
+    }else if(e.key === 'i') {
+      eyePosR *= 0.95
+    }
+  })
+
+  const fileInput = document.getElementById('fileInput')
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      const data = reader.result;
+      loadObjData(data)
+    };
+    reader.readAsText(file);
+  })
+
+  fetch('./stanford-bunny.obj').then((res) => {
+    return res.text()
+  }).then((data) => {
+    loadObjData(data)
+  })
+
+  window.requestAnimationFrame(draw);
+}
+
+function loadObjData(data) {
+  const objData = load(data)
+  polygons = objData.polygons
+  center = objData.center
+  const range = objData.range
+  const xRange = range.x.max - range.x.min
+  const yRange = range.y.max - range.y.min
+  const zRange = range.z.max - range.z.min
+  eyePosR = Math.max(xRange, yRange, zRange) * 1.8
+  eyePosTheta = toRad(60)
+  eyePosPhi = toRad(90)
+  near = eyePosR * 0.001
+  far = eyePosR * 5
+}
+
+function draw () {
+  if (polygons.length === 0) {
+    window.requestAnimationFrame(draw);
+    return
+  }
+
+  const eye = {
+    x: center.x + eyePosR * Math.sin(eyePosTheta) * Math.cos(eyePosPhi),
+    y: center.y + eyePosR * Math.cos(eyePosTheta),
+    z: center.z + eyePosR * Math.sin(eyePosTheta) * Math.sin(eyePosPhi),
+  }
+
+  const imageData = render({
+    polygons,
+    view: { eye, center, up:UP, fovy:FOVY, near, far },
+    lightPos: eye,
+    screen: { width:SCREEN_WIDTH, height:SCREEN_HEIGHT },
+  })
+
+  const canvas = document.getElementById('canvas')
+  const ctx = canvas.getContext('2d')
+  ctx.putImageData(imageData, 0, 0)
+
+  window.requestAnimationFrame(draw);
+}
+
+</script>
+
+<body onload="init()">
+  <div>
+    <input id="fileInput" type="file">
+  </div>
+  <canvas id="canvas" tabindex="0"></canvas>
+  <div id="link">
+    <a href="../3_shading/">Back</a>
+  </div>  
+</body>
+
+</html>
