@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>九九をおぼえよう</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  background: #f5f5f5;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+table {
+  border-collapse: collapse;
+  margin: auto;
+  background: white;
+}
+
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  width: 120px;
+  text-align: center;
+}
+
+.answer {
+  display: none;
+  color: blue;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+button {
+  margin-top: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+</style>
+
+</head>
+
+<script>
+const init = () => {
+  const table = document.getElementById("kukuTable");
+
+  for (let i = 1; i <= 9; i++) {
+    const row = document.createElement("tr"); 
+    for (let j = 1; j <= 9; j++) {  
+      const td = document.createElement("td");  
+      const question = document.createElement("div");
+      question.textContent = `${i} × ${j}`; 
+      const answer = document.createElement("div");
+      answer.className = "answer";
+      answer.textContent = `＝ ${i * j}`; 
+      const button = document.createElement("button");
+      button.textContent = "こたえ";  
+
+      button.onclick = function () {
+        if (answer.style.display === "block") {
+          answer.style.display = "none";
+          button.textContent = "こたえ";
+        } else {
+          answer.style.display = "block";
+          button.textContent = "かくす";
+        }
+      };  
+
+      td.appendChild(question);
+      td.appendChild(answer);
+      td.appendChild(button); 
+      row.appendChild(td);
+    } 
+    table.appendChild(row);
+  }
+}
+</script>
+
+<body onload="init()">
+  <h1>九九をおぼえよう！</h1>
+  <table id="kukuTable"></table>
+</body>
+</html>
