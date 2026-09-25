@@ -176,9 +176,13 @@ class TimeRangeSlider {
     this.start = 0;
     this.end = 1;
     this.clicked = '';
-    this.canvas.addEventListener("pointerdown", (event) => this.pointerDown(event));
-    this.canvas.addEventListener("pointermove", (event) => this.pointerMove(event));
-    this.canvas.addEventListener("pointerup", () => this.clicked = '');
+    this.canvas.addEventListener("mousedown", (event) => this.mouseDown(event));
+    this.canvas.addEventListener("mousemove", (event) => this.mouseMove(event));
+    this.canvas.addEventListener("mouseleave", () => this.clicked = '');
+    this.canvas.addEventListener("mouseup", () => this.clicked = '');
+    this.canvas.addEventListener("touchstart", (event) => this.touchStart(event));
+    this.canvas.addEventListener("touchmove", (event) => this.touchMove(event));
+    this.canvas.addEventListener("touchend", () => this.clicked = '');
     window.addEventListener("resize", () => this.resize());
     this.resize();
   }
@@ -224,8 +228,7 @@ class TimeRangeSlider {
     ctx.fillRect(endX - KNOB_WIDTH, 0, KNOB_WIDTH, height);
   }
 
-  pointerDown = (event) => {
-    const x = event.offsetX;
+  pointerDown = (x) => {
     const width = this.canvas.width;
     const startX = this.start * width;
     const endX = this.end * width;
@@ -237,15 +240,14 @@ class TimeRangeSlider {
       this.clicked = 'end';
     } else if (startX <= x && x <= endX) {
       this.clicked = 'current';
-    }
+    }    
   }
 
-  pointerMove = (event) => {
+  pointerMove = (x) => {
     if (this.clicked === '') {
       return;
     }
 
-    const x = event.offsetX;
     const width = this.canvas.width;
     const value = x / width;
     if (this.clicked === 'start') {
@@ -254,6 +256,26 @@ class TimeRangeSlider {
       this.onChangeEnd(Math.max(value, this.start));
     } else if (this.clicked === 'current') {
       this.onChangeCurrent(Math.min(Math.max(value, this.start), this.end));
-    }
+    }    
+  }
+
+  mouseDown = (event) => {
+    const x = event.offsetX;
+    this.pointerDown(x);
+  }
+
+  mouseMove = (event) => {
+    const x = event.offsetX;
+    this.pointerMove(x);
+  }
+
+  touchStart = (event) => {
+    const x = event.touches[0].clientX - this.canvas.getBoundingClientRect().left;
+    this.pointerDown(x);
+  }
+
+  touchMove = (event) => {
+    const x = event.touches[0].clientX - this.canvas.getBoundingClientRect().left;
+    this.pointerMove(x);  
   }
 }
