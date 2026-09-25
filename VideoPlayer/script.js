@@ -61,6 +61,12 @@ const init = () => {
     }
   });
 
+  const setStartTimeButton = document.getElementById("setStartTime");
+  setStartTimeButton.addEventListener("click", () => {
+    const currentTime = videoPlayer.currentTime.toFixed(3);
+    startTimeInput.value = currentTime
+  });
+
   const endTimeInput = document.getElementById("endTime");
   endTimeInput.addEventListener("blur", () => {
     const startTime = parseFloat(startTimeInput.value);
@@ -74,6 +80,12 @@ const init = () => {
     }
   });
 
+  const setEndTimeButton = document.getElementById("setEndTime");
+  setEndTimeButton.addEventListener("click", () => {
+    const currentTime = videoPlayer.currentTime.toFixed(3);
+    endTimeInput.value = currentTime
+  });
+
   const speedInput = document.getElementById("speed");
     speedInput.addEventListener("input", () => {
     const speed = parseFloat(speedInput.value);
@@ -81,13 +93,13 @@ const init = () => {
   });
 
   videoPlayer.addEventListener("loadedmetadata", () => {
-    const duration = Math.floor(Number(videoPlayer.duration) * 1000) / 1000; // Round to 3 decimal places
+    const duration = videoPlayer.duration.toFixed(3);
     startTimeInput.min = 0;
-    startTimeInput.max = String(duration);
+    startTimeInput.max = duration;
     startTimeInput.value = 0;
     endTimeInput.min = 0;
-    endTimeInput.max = String(duration);
-    endTimeInput.value = String(duration);
+    endTimeInput.max = duration;
+    endTimeInput.value = duration;
     updateCurrentTime();
   });
 

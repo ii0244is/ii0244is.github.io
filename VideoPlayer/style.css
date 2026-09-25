@@ -8,7 +8,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   color: #fff;
 }
 
@@ -17,7 +18,8 @@ body {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   color: #fff;
 }
 
@@ -70,6 +72,13 @@ body {
 
 #playPause {
   width: 4rem;
+}
+
+.setButton {
+  width: 2rem;
+  margin-left: 0.1rem;
+  padding: 0.2rem 0.2rem;
+  font-size: 0.8rem;
 }
 
 button {
